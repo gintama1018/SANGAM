@@ -185,6 +185,30 @@ class FrameRoomClient : Closeable {
         }
     }
 
+    suspend fun uploadFullRes(
+        hostIp: String,
+        port: Int,
+        photoId: String,
+        imageBytes: ByteArray,
+        sessionToken: String? = null
+    ): Result<Boolean> {
+        return try {
+            val token = sessionToken ?: this.sessionToken
+            val response = httpClient.post("http://$hostIp:$port/api/photo/$photoId/full") {
+                contentType(ContentType.Image.JPEG)
+                token?.let { header("X-Session-Token", it) }
+                setBody(imageBytes)
+            }
+            if (response.status.value in 200..299) {
+                Result.success(true)
+            } else {
+                Result.failure(Exception("HTTP ${response.status.value}: ${response.bodyAsText()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun closeRoom(
         hostIp: String,
         port: Int,

@@ -576,4 +576,110 @@ class PhotoIdentityAndDeduplicationTest {
         badReactConn.outputStream.use { it.write("""{"deviceId":"test-dev"}""".toByteArray()) }
         assertEquals(400, badReactConn.responseCode)
     }
+
+    // 20. Full-res upload accepts valid JPEG within 20MB limit and saves original.
+    @Test
+    fun testFullResUploadAcceptsValidJpegWithinSizeCap() = runBlocking {
+        val (srv, cl) = ensureServerStarted()
+        val photoId = PhotoIdentity.generatePhotoId("FR-TEST", "guest-full-1", 1001L, 1710000000000L)
+        val jpegBytes = createValidSampleJpeg()
+
+        val uploadResult = cl.uploadFullRes("127.0.0.1", testPort, photoId, jpegBytes)
+        assertTrue("Upload full-res must succeed for valid JPEG", uploadResult.isSuccess)
+
+        // Verify file written to originals directory
+        val originalFile = File(tempDir, "photos/originals/$photoId.jpg")
+        assertTrue("Original JPEG file must exist on disk", originalFile.exists())
+
+        // Verify GET /api/photo/{id}/full returns 200 and exact bytes
+        val getConn = (java.net.URL("http://127.0.0.1:$testPort/api/photo/$photoId/full?token=${srv.room.value?.sessionToken}").openConnection() as java.net.HttpURLConnection)
+        assertEquals(200, getConn.responseCode)
+        val fetchedBytes = getConn.inputStream.use { it.readBytes() }
+        assertTrue("Fetched original bytes must match uploaded bytes", fetchedBytes.contentEquals(jpegBytes))
+    }
+
+    // 21. Full-res upload rejects non-JPEG payload with 400 Bad Request.
+    @Test
+    fun testFullResUploadRejectsNonJpegBytes() = runBlocking {
+        val (_, cl) = ensureServerStarted()
+        val photoId = PhotoIdentity.generatePhotoId("FR-TEST", "guest-full-2", 1002L, 1710000000000L)
+        val nonJpegBytes = byteArrayOf(0x00, 0x01, 0x02, 0x03, 0x04)
+
+        val uploadResult = cl.uploadFullRes("127.0.0.1", testPort, photoId, nonJpegBytes)
+        assertTrue("Upload full-res must fail for non-JPEG bytes", uploadResult.isFailure)
+
+        val originalFile = File(tempDir, "photos/originals/$photoId.jpg")
+        assertFalse("Non-JPEG file must not be written to disk", originalFile.exists())
+    }
+
+    // 22. Full-res upload rejects declared Content-Length exceeding 20MB with 413 Payload Too Large.
+    @Test
+    fun testFullResUploadRejectsDeclaredLengthExceeding20MB() = runBlocking {
+        val (srv, _) = ensureServerStarted()
+        val photoId = PhotoIdentity.generatePhotoId("FR-TEST", "guest-full-3", 1003L, 1710000000000L)
+
+        // Use direct socket to send declared Content-Length without writing 25MB body
+        java.net.Socket("127.0.0.1", testPort).use { socket ->
+            val writer = socket.getOutputStream().bufferedWriter(Charsets.UTF_8)
+            writer.write("POST /api/photo/$photoId/full HTTP/1.1\r\n")
+            writer.write("Host: 127.0.0.1:$testPort\r\n")
+            writer.write("X-Session-Token: ${srv.room.value?.sessionToken}\r\n")
+            writer.write("Content-Type: image/jpeg\r\n")
+            writer.write("Content-Length: 26214400\r\n") // 25 MB declared
+            writer.write("\r\n")
+            writer.flush()
+
+            val reader = socket.getInputStream().bufferedReader(Charsets.UTF_8)
+            val statusLine = reader.readLine() ?: ""
+            assertTrue("Status line must indicate 413 Payload Too Large: $statusLine", statusLine.contains("413"))
+        }
+    }
+
+    // 23. Full-res upload rejects actual payload bytes exceeding 20MB with 413 Payload Too Large.
+    @Test
+    fun testFullResUploadRejectsActualBytesExceeding20MB() = runBlocking {
+        val (srv, _) = ensureServerStarted()
+        val photoId = PhotoIdentity.generatePhotoId("FR-TEST", "guest-full-4", 1004L, 1710000000000L)
+
+        // Create byte array exceeding 20MB with JPEG magic header
+        val oversizedSize = (20 * 1024 * 1024 + 1024) // 20MB + 1KB
+        val oversizedBytes = ByteArray(oversizedSize)
+        oversizedBytes[0] = 0xFF.toByte()
+        oversizedBytes[1] = 0xD8.toByte()
+        oversizedBytes[2] = 0xFF.toByte()
+        oversizedBytes[3] = 0xE0.toByte()
+
+        val conn = (java.net.URL("http://127.0.0.1:$testPort/api/photo/$photoId/full").openConnection() as java.net.HttpURLConnection).apply {
+            requestMethod = "POST"
+            setRequestProperty("X-Session-Token", srv.room.value?.sessionToken)
+            setRequestProperty("Content-Type", "image/jpeg")
+            setFixedLengthStreamingMode(oversizedSize)
+            doOutput = true
+        }
+        conn.outputStream.use { it.write(oversizedBytes) }
+        assertEquals(413, conn.responseCode)
+
+        val originalFile = File(tempDir, "photos/originals/$photoId.jpg")
+        assertFalse("Oversized file must not be written to disk", originalFile.exists())
+    }
+
+    // 24. Full-res upload rejected with 403 Forbidden when room is closed.
+    @Test
+    fun testFullResUploadRejectedWhenRoomClosed() = runBlocking {
+        // Start fresh server
+        tearDown()
+        val (srv, cl) = ensureServerStarted()
+        val photoId = PhotoIdentity.generatePhotoId("FR-TEST", "guest-full-5", 1005L, 1710000000000L)
+
+        // Close room as host
+        val closeResult = cl.closeRoom("127.0.0.1", testPort, hostSecret = srv.room.value?.hostSecret ?: "")
+        assertTrue(closeResult.isSuccess)
+
+        // Attempt full-res upload
+        val uploadResult = cl.uploadFullRes("127.0.0.1", testPort, photoId, createValidSampleJpeg())
+        assertTrue("Upload full-res to closed room must fail", uploadResult.isFailure)
+
+        val originalFile = File(tempDir, "photos/originals/$photoId.jpg")
+        assertFalse("File must not be written when room is closed", originalFile.exists())
+    }
 }

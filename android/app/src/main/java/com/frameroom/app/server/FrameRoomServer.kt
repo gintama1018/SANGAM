@@ -56,6 +56,8 @@ class FrameRoomServer(
 ) {
     companion object {
         val VALID_PHOTO_ID_REGEX = Regex("^[a-zA-Z0-9_]{1,128}$")
+        const val MAX_FULL_RES_BYTES = 20 * 1024 * 1024L // 20 MB cap
+        const val MAX_THUMBNAIL_BYTES = 500 * 1024L      // 500 KB cap
     }
 
     private var serverEngine: ApplicationEngine? = null
@@ -219,11 +221,24 @@ class FrameRoomServer(
                         return@post
                     }
 
+                    val declaredLength = call.request.headers["Content-Length"]?.toLongOrNull()
+                    if (declaredLength != null && declaredLength > MAX_THUMBNAIL_BYTES) {
+                        call.respond(
+                            HttpStatusCode.PayloadTooLarge,
+                            SyncAck(
+                                photoId = photoId,
+                                status = SyncAckStatus.REJECTED_INVALID_PAYLOAD,
+                                serverTimestamp = System.currentTimeMillis()
+                            )
+                        )
+                        return@post
+                    }
+
                     val channel = call.receiveChannel()
                     val bytes = channel.toByteArray()
 
                     // Validate MIME JPEG signature (0xFF, 0xD8) and size cap (max 500 KB)
-                    if (bytes.size < 4 || bytes[0] != 0xFF.toByte() || bytes[1] != 0xD8.toByte() || bytes.size > 500 * 1024) {
+                    if (bytes.size < 4 || bytes[0] != 0xFF.toByte() || bytes[1] != 0xD8.toByte() || bytes.size > MAX_THUMBNAIL_BYTES) {
                         call.respond(
                             HttpStatusCode.BadRequest,
                             SyncAck(
@@ -332,8 +347,34 @@ class FrameRoomServer(
                         call.respond(HttpStatusCode.BadRequest, "Invalid photo ID format")
                         return@post
                     }
+                    val currentRoom = _room.value
+                    if (currentRoom == null || currentRoom.closedAt != null) {
+                        call.respond(HttpStatusCode.Forbidden, "Room is closed")
+                        return@post
+                    }
+
+                    // 1. Quick-reject via Content-Length header if declared larger than 20MB
+                    val declaredLength = call.request.headers["Content-Length"]?.toLongOrNull()
+                    if (declaredLength != null && declaredLength > MAX_FULL_RES_BYTES) {
+                        call.respond(HttpStatusCode.PayloadTooLarge, "Declared payload size exceeds 20MB limit")
+                        return@post
+                    }
+
                     val channel = call.receiveChannel()
                     val bytes = channel.toByteArray()
+
+                    // 2. Definitive check on actual received byte count
+                    if (bytes.size > MAX_FULL_RES_BYTES) {
+                        call.respond(HttpStatusCode.PayloadTooLarge, "Payload size exceeds 20MB limit")
+                        return@post
+                    }
+
+                    // 3. Validate JPEG magic bytes signature (0xFF, 0xD8)
+                    if (bytes.size < 4 || bytes[0] != 0xFF.toByte() || bytes[1] != 0xD8.toByte()) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid image format (expected JPEG)")
+                        return@post
+                    }
+
                     val file = File(originalsDir, "$id.jpg")
                     if (!file.canonicalPath.startsWith(originalsDir.canonicalPath)) {
                         call.respond(HttpStatusCode.BadRequest, "Invalid photo ID format")
