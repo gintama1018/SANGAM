@@ -7,12 +7,14 @@
             android:duration="320"
             android:propertyName="scaleX"
             android:valueFrom="0.2"
-            android:valueTo="0.2" />
+            android:valueTo="0.2"
+            android:valueType="floatType" />
         <objectAnimator
             android:duration="320"
             android:propertyName="scaleY"
             android:valueFrom="0.2"
-            android:valueTo="0.2" />
+            android:valueTo="0.2"
+            android:valueType="floatType" />
     </set>
     <!-- Rapid Flash Explosion (320 to 460ms) -->
     <set android:ordering="together">
@@ -21,12 +23,14 @@
             android:propertyName="scaleX"
             android:valueFrom="0.2"
             android:valueTo="1.35"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/decelerate_cubic" />
         <objectAnimator
             android:duration="140"
             android:propertyName="scaleY"
             android:valueFrom="0.2"
             android:valueTo="1.35"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/decelerate_cubic" />
     </set>
     <!-- Dissipate into air (460 to 800ms) -->
@@ -36,12 +40,14 @@
             android:propertyName="scaleX"
             android:valueFrom="1.35"
             android:valueTo="1.6"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/accelerate_cubic" />
         <objectAnimator
             android:duration="340"
             android:propertyName="scaleY"
             android:valueFrom="1.35"
             android:valueTo="1.6"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/accelerate_cubic" />
     </set>
 </set>

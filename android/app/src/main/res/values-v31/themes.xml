@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base Application Theme -->
+    <style name="Theme.FrameRoom" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/surface_onyx</item>
+        <item name="android:navigationBarColor">@color/surface_onyx</item>
+        <item name="android:windowBackground">@color/surface_onyx</item>
+    </style>
+
+    <!-- Native Splash Screen Theme for API 31+ (Android 12+) -->
+    <style name="Theme.SplashScreen" parent="Theme.SplashScreen">
+        <!-- Compat attributes for androidx.core:core-splashscreen -->
+        <item name="windowSplashScreenBackground">@color/surface_onyx</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/avd_shutter_click</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
+
+        <!-- Platform attributes for Android 12+ OS WindowManager -->
+        <item name="android:windowSplashScreenBackground">@color/surface_onyx</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/avd_shutter_click</item>
+        <item name="android:windowSplashScreenAnimationDuration">800</item>
+
+        <item name="postSplashScreenTheme">@style/Theme.FrameRoom</item>
+    </style>
+</resources>

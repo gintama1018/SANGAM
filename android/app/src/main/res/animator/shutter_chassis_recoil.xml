@@ -8,12 +8,14 @@
             android:propertyName="scaleX"
             android:valueFrom="1.0"
             android:valueTo="0.97"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/linear" />
         <objectAnimator
             android:duration="320"
             android:propertyName="scaleY"
             android:valueFrom="1.0"
             android:valueTo="0.97"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/linear" />
     </set>
     <!-- Shutter trip recoil impulse (320 to 440ms) -->
@@ -23,12 +25,14 @@
             android:propertyName="scaleX"
             android:valueFrom="0.97"
             android:valueTo="1.03"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/decelerate_cubic" />
         <objectAnimator
             android:duration="120"
             android:propertyName="scaleY"
             android:valueFrom="0.97"
             android:valueTo="1.03"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/decelerate_cubic" />
     </set>
     <!-- Settling back to resting state (440 to 800ms) -->
@@ -38,12 +42,14 @@
             android:propertyName="scaleX"
             android:valueFrom="1.03"
             android:valueTo="1.0"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/overshoot" />
         <objectAnimator
             android:duration="360"
             android:propertyName="scaleY"
             android:valueFrom="1.03"
             android:valueTo="1.0"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/overshoot" />
     </set>
 </set>

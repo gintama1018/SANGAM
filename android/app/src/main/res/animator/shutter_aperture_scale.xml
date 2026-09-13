@@ -8,12 +8,14 @@
             android:propertyName="scaleX"
             android:valueFrom="1.0"
             android:valueTo="0.45"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/accelerate_cubic" />
         <objectAnimator
             android:duration="340"
             android:propertyName="scaleY"
             android:valueFrom="1.0"
             android:valueTo="0.45"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/accelerate_cubic" />
     </set>
     <!-- Phase 2: Iris core springs back open to resting wide aperture (340 to 800ms) -->
@@ -23,12 +25,14 @@
             android:propertyName="scaleX"
             android:valueFrom="0.45"
             android:valueTo="1.0"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/overshoot" />
         <objectAnimator
             android:duration="460"
             android:propertyName="scaleY"
             android:valueFrom="0.45"
             android:valueTo="1.0"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/overshoot" />
     </set>
 </set>

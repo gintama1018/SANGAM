@@ -7,13 +7,15 @@
             android:duration="320"
             android:propertyName="fillAlpha"
             android:valueFrom="0.0"
-            android:valueTo="0.0" />
+            android:valueTo="0.0"
+            android:valueType="floatType" />
         <!-- Flash Burst Peak (320 to 390ms) -->
         <objectAnimator
             android:duration="70"
             android:propertyName="fillAlpha"
             android:valueFrom="0.0"
             android:valueTo="1.0"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/decelerate_cubic" />
         <!-- Flash Decay (390 to 800ms) -->
         <objectAnimator
@@ -21,6 +23,7 @@
             android:propertyName="fillAlpha"
             android:valueFrom="1.0"
             android:valueTo="0.0"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/accelerate_cubic" />
     </set>
     <set android:ordering="sequentially">
@@ -29,13 +32,15 @@
             android:duration="320"
             android:propertyName="strokeAlpha"
             android:valueFrom="0.0"
-            android:valueTo="0.0" />
+            android:valueTo="0.0"
+            android:valueType="floatType" />
         <!-- Flash Burst Peak (320 to 390ms) -->
         <objectAnimator
             android:duration="70"
             android:propertyName="strokeAlpha"
             android:valueFrom="0.0"
             android:valueTo="1.0"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/decelerate_cubic" />
         <!-- Flash Decay (390 to 800ms) -->
         <objectAnimator
@@ -43,6 +48,7 @@
             android:propertyName="strokeAlpha"
             android:valueFrom="1.0"
             android:valueTo="0.0"
+            android:valueType="floatType"
             android:interpolator="@android:interpolator/accelerate_cubic" />
     </set>
 </set>

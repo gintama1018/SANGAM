@@ -29,6 +29,15 @@ import com.frameroom.app.ui.screens.WelcomeScreen
 import com.frameroom.app.ui.theme.FrameRoomTheme
 import com.frameroom.app.ui.theme.SurfaceOnyx
 
+import android.animation.ObjectAnimator
+import android.graphics.drawable.Animatable
+import android.view.View
+import android.view.animation.DecelerateInterpolator
+import androidx.core.animation.doOnEnd
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 class MainActivity : ComponentActivity() {
 
     private val viewModel: FrameRoomViewModel by viewModels()
@@ -40,7 +49,33 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+
+        // Ensure the 800ms shutter-click / aperture AVD animation completes visibly on cold start
+        var keepSplashOnScreen = true
+        splashScreen.setKeepOnScreenCondition { keepSplashOnScreen }
+        lifecycleScope.launch {
+            delay(800)
+            keepSplashOnScreen = false
+        }
+
+        // Smooth fade-out exit transition and start AVD if needed
+        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
+            val iconDrawable = (splashScreenViewProvider.iconView as? android.widget.ImageView)?.drawable
+            (iconDrawable as? Animatable)?.start()
+            val fadeOut = ObjectAnimator.ofFloat(
+                splashScreenViewProvider.view,
+                View.ALPHA,
+                1f,
+                0f
+            ).apply {
+                interpolator = DecelerateInterpolator()
+                duration = 200L
+                doOnEnd { splashScreenViewProvider.remove() }
+            }
+            fadeOut.start()
+        }
+
         super.onCreate(savedInstanceState)
 
         checkAndRequestPermissions()
