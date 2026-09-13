@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudDownload
@@ -137,14 +138,14 @@ fun MyPhotosScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Face,
+                            imageVector = Icons.Default.CameraAlt,
                             contentDescription = null,
                             tint = AmberPrimary,
                             modifier = Modifier.size(15.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "INSTANT FACE RECOGNITION",
+                            text = "DEVICE CAMERA SYNC",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = AmberPrimary,
                                 fontWeight = FontWeight.SemiBold,
@@ -154,7 +155,7 @@ fun MyPhotosScreen(
                     }
 
                     Text(
-                        text = "Photos of You",
+                        text = "My Photos",
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = OnSurface,
@@ -163,7 +164,7 @@ fun MyPhotosScreen(
                     )
 
                     Text(
-                        text = "AI facial indexing & auto-sync detected 42 memories of you across 6 live cameras at Spring Fest 2025.",
+                        text = "Camera roll captures detected and synced from this device during Spring Fest 2025.",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = OnSurfaceVariant,
                             lineHeight = 20.sp
@@ -178,7 +179,7 @@ fun MyPhotosScreen(
                 ) {
                     item {
                         MyPhotosFilterTab(
-                            label = "All Tagged (42)",
+                            label = "All Synced (42)",
                             icon = Icons.Default.AutoAwesome,
                             isSelected = selectedTab == 0,
                             onClick = { selectedTab = 0 }
@@ -211,16 +212,16 @@ fun MyPhotosScreen(
                     }
                 }
 
-                // Interactive Batch Action & Selection Ribbon
+                // Batch Selection Ribbon (Floating glass card)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(SurfaceContainer)
-                        .border(1.dp, HairlineBorder, RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(SurfaceContainerLow)
+                        .border(1.dp, HairlineBorder, RoundedCornerShape(14.dp))
                         .padding(14.dp)
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -229,7 +230,7 @@ fun MyPhotosScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .size(26.dp)
+                                        .size(28.dp)
                                         .clip(CircleShape)
                                         .background(AmberContainer),
                                     contentAlignment = Alignment.Center
@@ -252,7 +253,7 @@ fun MyPhotosScreen(
                                         )
                                     )
                                     Text(
-                                        text = "38.4 MB total • Lossless RAW",
+                                        text = "38.4 MB total • High-Quality Photos",
                                         style = MetadataMonoStyle.copy(
                                             color = OnSurfaceVariant,
                                             fontSize = 11.sp
@@ -299,7 +300,7 @@ fun MyPhotosScreen(
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(AmberContainer)
                                     .clickable {
-                                        Toast.makeText(context, "Downloading ${selectedCards.size} lossless RAW photos...", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Saving ${selectedCards.size} high-quality photos...", Toast.LENGTH_SHORT).show()
                                     }
                                     .padding(horizontal = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -330,7 +331,7 @@ fun MyPhotosScreen(
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(SurfaceContainerHighest)
                                     .clickable {
-                                        Toast.makeText(context, "Downloading All 42 photos in 4K RAW...", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Saving All 42 photos...", Toast.LENGTH_SHORT).show()
                                     }
                                     .padding(horizontal = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -456,57 +457,18 @@ fun MyPhotosScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Stars,
+                                imageVector = Icons.Default.CameraAlt,
                                 contentDescription = null,
                                 tint = AmberPrimary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "99.4% Face Match",
+                                text = "Device Camera",
                                 style = MetadataMonoStyle.copy(
                                     color = OnSurface,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 11.sp
-                                )
-                            )
-                        }
-                    }
-
-                    // AI Focus Ring Indicator Overlay
-                    val ringPulse = rememberInfiniteTransition(label = "ring")
-                    val ringAlpha by ringPulse.animateFloat(
-                        initialValue = 0.5f,
-                        targetValue = 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(700, easing = FastOutSlowInEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "ringAlpha"
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .border(2.dp, AmberPrimary.copy(alpha = ringAlpha), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .offset(y = 12.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(SurfaceContainerLowest.copy(alpha = 0.85f))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "YOU",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = AmberPrimary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp
                                 )
                             )
                         }
@@ -565,9 +527,9 @@ fun MyPhotosScreen(
                         id = "card2",
                         imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBE6J5em-oglO78cItzMnI9F9gMdfAQ9pMMW5sN3gqFf3X2NlUEmQHmhjf1eHy3XFUCb1WDRFPC-JV1Vvqz9HHY97QVIFCL3iUN5qG5Ow3bCkqYSLdI9HWOAlcKe5Z_fYkwA1IVKvzfdBeF0ZQVrAmGerDGb_KNX-vF8uJIKAg3rlmx1xcqIVRpsDGBteUKI_9skGlme1jr8pyxtzaKbE_lO3yvyXEE6Hv41RhqG7WYg3uCKAS-AHaq",
                         title = "Golden Confetti Blast",
-                        creator = "by @marcus_raw",
+                        creator = "by @marcus_lens",
                         meta = "20:15 • Stage B",
-                        badge = "RAW 48MP",
+                        badge = "HIGH-RES",
                         isSelected = selectedCards.contains("card2"),
                         onToggle = {
                             selectedCards = if (selectedCards.contains("card2"))
@@ -672,7 +634,7 @@ fun MyPhotosScreen(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "5 Friends Tagged",
+                                text = "5 In Photo",
                                 style = MetadataMonoStyle.copy(
                                     color = OnSurface,
                                     fontSize = 11.sp
@@ -912,7 +874,7 @@ fun MyPhotosScreen(
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "Zero Algorithmic Compression",
+                                    text = "Original Metadata Preserved",
                                     style = MaterialTheme.typography.labelLarge.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = OnSurface
@@ -927,7 +889,7 @@ fun MyPhotosScreen(
                                 )
                             }
                             Text(
-                                text = "All photos downloaded in 100% original photographer resolution with native EXIF metadata preserved.",
+                                text = "Camera roll captures synced with native EXIF camera metadata preserved.",
                                 style = MetadataMonoStyle.copy(
                                     color = OnSurfaceVariant,
                                     fontSize = 11.sp

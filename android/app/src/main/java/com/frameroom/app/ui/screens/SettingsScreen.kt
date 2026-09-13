@@ -414,7 +414,7 @@ fun SettingsScreen(
                         SettingsRowTile(
                             icon = Icons.Default.Hd,
                             title = "Sync Quality",
-                            subtitle = "Lossless Original (RAW & HEIC)",
+                            subtitle = "High Quality (JPEG & HEIC)",
                             subtitleColor = IndigoPrimary,
                             trailing = {
                                 Icon(

@@ -483,7 +483,7 @@ fun HostRoomScreen(
                                                 .padding(horizontal = 5.dp, vertical = 2.dp)
                                         ) {
                                             Text(
-                                                text = "120 FPS Ready",
+                                                text = "Live P2P Stream",
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     color = OnAmber,
                                                     fontWeight = FontWeight.Bold,
@@ -493,7 +493,7 @@ fun HostRoomScreen(
                                         }
                                     }
                                     Text(
-                                        text = "4K RAW Stream",
+                                        text = "High-Quality Stream",
                                         style = MetadataMonoStyle.copy(
                                             color = OnSurfaceVariant,
                                             fontSize = 10.sp

@@ -393,7 +393,7 @@ fun PhotoDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "4K RAW",
+                                    text = "HIGH-RES",
                                     style = MetadataMonoStyle.copy(
                                         color = AmberPrimary,
                                         fontWeight = FontWeight.Bold,
@@ -543,7 +543,7 @@ fun PhotoDetailScreen(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (isSaved) "Saved!" else if (isSaving) "Saving 4K..." else "Save 4K Roll",
+                        text = if (isSaved) "Saved!" else if (isSaving) "Saving..." else "Save Photo",
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = OnAmber,
                             fontWeight = FontWeight.Bold,
@@ -559,7 +559,7 @@ fun PhotoDetailScreen(
                         .clip(CircleShape)
                         .background(SurfaceContainerHigh.copy(alpha = 0.85f))
                         .clickable {
-                            Toast.makeText(context, "Lossless RAW link generated", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Photo link copied", Toast.LENGTH_SHORT).show()
                         },
                     contentAlignment = Alignment.Center
                 ) {

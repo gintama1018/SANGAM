@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PersonPin
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -383,9 +384,9 @@ fun LiveGalleryScreen(
                 }
                 item {
                     GalleryFilterChip(
-                        label = "Photos of You (42)",
+                        label = "My Photos (42)",
                         isSelected = selectedFilter == LiveGalleryFilter.PHOTOS_OF_YOU,
-                        icon = Icons.Default.Face,
+                        icon = Icons.Default.PhotoLibrary,
                         onClick = { viewModel.navigateTo(AppScreen.MY_UPLOADS) }
                     )
                 }

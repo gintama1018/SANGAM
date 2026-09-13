@@ -78,12 +78,17 @@ class GalleryContentObserver(
     private fun scanRecentPhotos() {
         coroutineScope.launch(Dispatchers.IO) {
             val resolver = context.contentResolver
-            val projection = arrayOf(
+            val projectionList = mutableListOf(
                 MediaStore.Images.Media._ID,
                 MediaStore.Images.Media.DATE_ADDED,
                 MediaStore.Images.Media.DATE_TAKEN,
-                MediaStore.Images.Media.DATA
+                MediaStore.Images.Media.DATA,
+                MediaStore.Images.Media.BUCKET_DISPLAY_NAME
             )
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                projectionList.add(MediaStore.Images.Media.RELATIVE_PATH)
+            }
+            val projection = projectionList.toTypedArray()
 
             // Convert event start time from ms to seconds for DATE_ADDED
             val minDateAddedSec = (activeWindowStartMs / 1000) - 60 // 1 min margin of safety
@@ -105,17 +110,39 @@ class GalleryContentObserver(
                     val dateAddedCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
                     val dateTakenCol = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)
                     val dataCol = cursor.getColumnIndex(MediaStore.Images.Media.DATA)
+                    val bucketCol = cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+                    val relPathCol = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH)
+                    } else -1
 
                     while (cursor.moveToNext()) {
                         val id = cursor.getLong(idCol)
                         if (processedMediaIds.contains(id)) continue
 
                         val path = if (dataCol >= 0) cursor.getString(dataCol) ?: "" else ""
-                        // Filter strictly for camera rolls (DCIM/Camera)
-                        val isCameraPhoto = path.contains("DCIM", ignoreCase = true) ||
+                        val bucket = if (bucketCol >= 0) cursor.getString(bucketCol) ?: "" else ""
+                        val relPath = if (relPathCol >= 0) cursor.getString(relPathCol) ?: "" else ""
+
+                        // Explicitly reject non-camera directories (screenshots, messaging, downloads)
+                        val isExcludedFolder = listOf("Screenshots", "WhatsApp", "Telegram", "Download", "Downloads", "Instagram", "Snapchat", "Twitter")
+                            .any { excluded ->
+                                path.contains(excluded, ignoreCase = true) ||
+                                bucket.contains(excluded, ignoreCase = true) ||
+                                relPath.contains(excluded, ignoreCase = true)
+                            }
+                        if (isExcludedFolder) continue
+
+                        // Verify camera roll origin across modern scoped-storage and legacy paths
+                        val isCameraPhoto = bucket.equals("Camera", ignoreCase = true) ||
+                                            bucket.equals("100ANDRO", ignoreCase = true) ||
+                                            bucket.equals("100MEDIA", ignoreCase = true) ||
+                                            relPath.startsWith("DCIM/Camera", ignoreCase = true) ||
+                                            relPath.startsWith("DCIM", ignoreCase = true) ||
+                                            path.contains("/DCIM/Camera", ignoreCase = true) ||
+                                            path.contains("/DCIM/", ignoreCase = true) ||
                                             path.contains("Camera", ignoreCase = true)
 
-                        if (!isCameraPhoto && path.isNotEmpty()) {
+                        if (!isCameraPhoto) {
                             continue
                         }
 
@@ -125,7 +152,7 @@ class GalleryContentObserver(
 
                         val contentUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toString())
 
-                        // Extract EXIF & compress thumbnail
+                        // Extract EXIF & compress preview thumbnail
                         val photo = processImageUri(resolver, contentUri, id, capturedAt)
                         if (photo != null) {
                             processedMediaIds.add(id)

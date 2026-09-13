@@ -453,7 +453,7 @@ fun ParticipantsScreen(
                                     )
                                 )
                                 Text(
-                                    text = "P2P Auto-syncing raw captures",
+                                    text = "P2P Auto-syncing camera captures",
                                     style = MetadataMonoStyle.copy(
                                         color = OnSurfaceVariant,
                                         fontSize = 11.sp
@@ -469,7 +469,7 @@ fun ParticipantsScreen(
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = "99.4%",
+                                text = "SYNCED",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = OnAmber,
                                     fontWeight = FontWeight.Bold
