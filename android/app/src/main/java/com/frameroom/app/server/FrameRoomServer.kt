@@ -40,12 +40,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.frameroom.app.core.PhotoIdentity
+import com.frameroom.app.core.SyncAck
+import com.frameroom.app.core.SyncAckStatus
 import java.io.File
 import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class FrameRoomServer(private val context: Context) {
+class FrameRoomServer(
+    private val context: Context? = null,
+    baseDir: File? = null
+) {
 
     private var serverEngine: ApplicationEngine? = null
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -65,12 +71,16 @@ class FrameRoomServer(private val context: Context) {
 
     private val activeSessions = Collections.synchronizedSet(mutableSetOf<DefaultWebSocketServerSession>())
 
+    private val storageDir by lazy {
+        baseDir ?: context?.filesDir ?: File(System.getProperty("java.io.tmpdir"), "frameroom_test")
+    }
+
     private val thumbnailsDir by lazy {
-        File(context.filesDir, "photos/thumbnails").apply { mkdirs() }
+        File(storageDir, "photos/thumbnails").apply { mkdirs() }
     }
 
     private val originalsDir by lazy {
-        File(context.filesDir, "photos/originals").apply { mkdirs() }
+        File(storageDir, "photos/originals").apply { mkdirs() }
     }
 
     fun start(
@@ -143,12 +153,8 @@ class FrameRoomServer(private val context: Context) {
 
                 // Thumbnail Upload
                 post("/api/photo/thumbnail") {
-                    val currentRoom = _room.value
-                    if (currentRoom == null || currentRoom.closedAt != null) {
-                        call.respond(HttpStatusCode.Forbidden, "Room is closed")
-                        return@post
-                    }
-
+                    val photoIdHeader = call.request.headers["X-Photo-Id"]
+                    val roomIdHeader = call.request.headers["X-Room-Id"]
                     val uploaderDeviceId = call.request.headers["X-Device-Id"] ?: "unknown"
                     val uploaderName = call.request.headers["X-Uploader-Name"] ?: "Guest"
                     val capturedAt = call.request.headers["X-Captured-At"]?.toLongOrNull() ?: System.currentTimeMillis()
@@ -157,20 +163,60 @@ class FrameRoomServer(private val context: Context) {
                     val iso = call.request.headers["X-ISO"]
                     val focalLength = call.request.headers["X-Focal-Length"]
 
+                    val currentRoom = _room.value
+                    val resolvedRoomId = roomIdHeader ?: currentRoom?.roomId ?: "unknown"
+
+                    val photoId = if (!photoIdHeader.isNullOrBlank()) {
+                        photoIdHeader
+                    } else {
+                        PhotoIdentity.generatePhotoId(resolvedRoomId, uploaderDeviceId, System.currentTimeMillis(), capturedAt)
+                    }
+
+                    if (currentRoom == null || currentRoom.closedAt != null) {
+                        call.respond(
+                            HttpStatusCode.Forbidden,
+                            SyncAck(
+                                photoId = photoId,
+                                status = SyncAckStatus.REJECTED_CLOSED_ROOM,
+                                serverTimestamp = System.currentTimeMillis()
+                            )
+                        )
+                        return@post
+                    }
+
                     val channel = call.receiveChannel()
                     val bytes = channel.toByteArray()
 
                     // Validate MIME JPEG signature (0xFF, 0xD8) and size cap (max 500 KB)
-                    if (bytes.size < 4 || bytes[0] != 0xFF.toByte() || bytes[1] != 0xD8.toByte()) {
-                        call.respond(HttpStatusCode.BadRequest, "Invalid JPEG image format")
-                        return@post
-                    }
-                    if (bytes.size > 500 * 1024) {
-                        call.respond(HttpStatusCode.PayloadTooLarge, "Thumbnail exceeds 500KB cap")
+                    if (bytes.size < 4 || bytes[0] != 0xFF.toByte() || bytes[1] != 0xD8.toByte() || bytes.size > 500 * 1024) {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            SyncAck(
+                                photoId = photoId,
+                                status = SyncAckStatus.REJECTED_INVALID_PAYLOAD,
+                                serverTimestamp = System.currentTimeMillis()
+                            )
+                        )
                         return@post
                     }
 
-                    val photoId = UUID.randomUUID().toString()
+                    // Deduplication check: return DUPLICATE_ACCEPTED if already present
+                    val isDuplicate = synchronized(_photos) {
+                        _photos.value.any { it.photoId == photoId }
+                    }
+
+                    if (isDuplicate) {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            SyncAck(
+                                photoId = photoId,
+                                status = SyncAckStatus.DUPLICATE_ACCEPTED,
+                                serverTimestamp = System.currentTimeMillis()
+                            )
+                        )
+                        return@post
+                    }
+
                     val thumbFile = File(thumbnailsDir, "$photoId.jpg")
                     thumbFile.writeBytes(bytes)
 
@@ -198,7 +244,14 @@ class FrameRoomServer(private val context: Context) {
                     }
 
                     broadcastEvent(WebSocketEvent.TYPE_NEW_PHOTO, json.encodeToString(meta))
-                    call.respond(HttpStatusCode.Created, meta)
+                    call.respond(
+                        HttpStatusCode.Created,
+                        SyncAck(
+                            photoId = photoId,
+                            status = SyncAckStatus.STORED,
+                            serverTimestamp = System.currentTimeMillis()
+                        )
+                    )
                 }
 
                 // Get Thumbnail

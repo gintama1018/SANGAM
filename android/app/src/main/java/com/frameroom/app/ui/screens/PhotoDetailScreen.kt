@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Hd
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Sync
@@ -275,6 +276,27 @@ fun PhotoDetailScreen(
                         .clip(CircleShape)
                         .background(SurfaceContainerHigh.copy(alpha = 0.75f))
                         .clickable {
+                            if (currentPhoto != null) {
+                                viewModel.uploadSelectedOnline(listOf(currentPhoto.photoId))
+                                Toast.makeText(context, "Queued for online upload", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = "Upload Online",
+                        tint = OnSurface,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(SurfaceContainerHigh.copy(alpha = 0.75f))
+                        .clickable {
                             Toast.makeText(context, "Fullscreen preview enabled", Toast.LENGTH_SHORT).show()
                         },
                     contentAlignment = Alignment.Center
@@ -448,6 +470,48 @@ fun PhotoDetailScreen(
                                             fontSize = 11.sp
                                         )
                                     )
+                                }
+
+                                val syncStatus = currentPhoto?.photoId?.let { viewModel.getPhotoSyncStatus(it) }
+                                if (syncStatus != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(AmberContainer.copy(alpha = 0.2f))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = syncStatus.first,
+                                                style = MetadataMonoStyle.copy(
+                                                    color = AmberPrimary,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            )
+                                        }
+                                        if (syncStatus.second != null) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(SurfaceContainerHighest)
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = syncStatus.second!!,
+                                                    style = MetadataMonoStyle.copy(
+                                                        color = OnSurface,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

@@ -6,9 +6,11 @@ import com.frameroom.app.core.PhotoMeta
 import com.frameroom.app.core.ReactionRequest
 import com.frameroom.app.core.ReactionResponse
 import com.frameroom.app.core.Room
+import com.frameroom.app.core.SyncAck
 import com.frameroom.app.core.WebSocketEvent
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.statement.bodyAsText
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
@@ -107,6 +109,8 @@ class FrameRoomClient : Closeable {
     suspend fun uploadThumbnail(
         hostIp: String,
         port: Int,
+        photoId: String,
+        roomId: String? = null,
         thumbnailBytes: ByteArray,
         uploaderDeviceId: String,
         uploaderName: String,
@@ -115,10 +119,12 @@ class FrameRoomClient : Closeable {
         exposure: String? = null,
         iso: String? = null,
         focalLength: String? = null
-    ): Result<PhotoMeta> {
+    ): Result<SyncAck> {
         return try {
             val response = httpClient.post("http://$hostIp:$port/api/photo/thumbnail") {
                 contentType(ContentType.Image.JPEG)
+                header("X-Photo-Id", photoId)
+                roomId?.let { header("X-Room-Id", it) }
                 header("X-Device-Id", uploaderDeviceId)
                 header("X-Uploader-Name", uploaderName)
                 header("X-Captured-At", capturedAt.toString())
@@ -127,8 +133,14 @@ class FrameRoomClient : Closeable {
                 iso?.let { header("X-ISO", it) }
                 focalLength?.let { header("X-Focal-Length", it) }
                 setBody(thumbnailBytes)
-            }.body<PhotoMeta>()
-            Result.success(response)
+            }
+            val syncAck = try {
+                response.body<SyncAck>()
+            } catch (e: Exception) {
+                val text = response.bodyAsText()
+                json.decodeFromString<SyncAck>(text)
+            }
+            Result.success(syncAck)
         } catch (e: Exception) {
             Result.failure(e)
         }

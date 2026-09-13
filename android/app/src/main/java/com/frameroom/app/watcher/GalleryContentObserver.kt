@@ -10,15 +10,19 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import com.frameroom.app.core.PhotoIdentity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.util.Collections
 import kotlin.math.max
 
 data class DetectedPhoto(
-    val uri: Uri,
+    val photoId: String = "",
+    val uri: Uri? = null,
     val mediaId: Long,
     val capturedAt: Long,
     val thumbnailBytes: ByteArray,
@@ -32,11 +36,15 @@ data class DetectedPhoto(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as DetectedPhoto
-        return mediaId == other.mediaId
+        return if (photoId.isNotBlank() && other.photoId.isNotBlank()) {
+            photoId == other.photoId
+        } else {
+            mediaId == other.mediaId
+        }
     }
 
     override fun hashCode(): Int {
-        return mediaId.hashCode()
+        return if (photoId.isNotBlank()) photoId.hashCode() else mediaId.hashCode()
     }
 }
 
@@ -46,57 +54,108 @@ class GalleryContentObserver(
     private val onPhotosDetected: (List<DetectedPhoto>) -> Unit
 ) : ContentObserver(Handler(Looper.getMainLooper())) {
 
-    private var activeWindowStartMs: Long = 0
-    private var isWatching = false
-    private val processedMediaIds = mutableSetOf<Long>()
+    var sessionState: CaptureSessionState = CaptureSessionState.IDLE
+        private set
+    var captureSessionStartedAt: Long = 0
+        private set
+    var activeRoomId: String = "local"
+        private set
+    var activeDeviceId: String = "local_device"
+        private set
 
-    fun startWatching(eventStartMs: Long) {
-        activeWindowStartMs = eventStartMs
-        isWatching = true
-        context.contentResolver.registerContentObserver(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            true,
-            this
-        )
-        // Scan any photos taken right at room creation
-        scanRecentPhotos()
+    val baselineMediaIds = Collections.synchronizedSet(mutableSetOf<Long>())
+    val processedMediaIds = Collections.synchronizedSet(mutableSetOf<Long>())
+    val pendingRetryMediaIds = Collections.synchronizedSet(mutableSetOf<Long>())
+
+    fun startWatching(eventStartMs: Long, roomId: String? = null, deviceId: String? = null) {
+        sessionState = CaptureSessionState.ACTIVE
+        captureSessionStartedAt = eventStartMs
+        roomId?.let { activeRoomId = it }
+        deviceId?.let { activeDeviceId = it }
+        processedMediaIds.clear()
+        pendingRetryMediaIds.clear()
+        baselineMediaIds.clear()
+
+        // Snapshot baseline of existing MediaStore image IDs
+        snapshotBaseline()
+
+        try {
+            context.contentResolver.registerContentObserver(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                true,
+                this
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun stopWatching() {
-        if (isWatching) {
-            isWatching = false
-            context.contentResolver.unregisterContentObserver(this)
+        if (sessionState == CaptureSessionState.ACTIVE) {
+            sessionState = CaptureSessionState.STOPPED
+            try {
+                context.contentResolver.unregisterContentObserver(this)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            baselineMediaIds.clear()
+            processedMediaIds.clear()
+            pendingRetryMediaIds.clear()
         }
     }
 
     override fun onChange(selfChange: Boolean, uri: Uri?) {
         super.onChange(selfChange, uri)
-        if (!isWatching) return
+        if (sessionState != CaptureSessionState.ACTIVE) return
         scanRecentPhotos()
     }
 
-    private fun scanRecentPhotos() {
+    private fun snapshotBaseline() {
+        try {
+            val projection = arrayOf(MediaStore.Images.Media._ID)
+            context.contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                while (cursor.moveToNext()) {
+                    baselineMediaIds.add(cursor.getLong(idCol))
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun scanRecentPhotos() {
         coroutineScope.launch(Dispatchers.IO) {
+            if (sessionState != CaptureSessionState.ACTIVE) return@launch
             val resolver = context.contentResolver
             val projectionList = mutableListOf(
                 MediaStore.Images.Media._ID,
                 MediaStore.Images.Media.DATE_ADDED,
                 MediaStore.Images.Media.DATE_TAKEN,
                 MediaStore.Images.Media.DATA,
-                MediaStore.Images.Media.BUCKET_DISPLAY_NAME
+                MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+                MediaStore.Images.Media.MIME_TYPE,
+                MediaStore.Images.Media.SIZE
             )
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 projectionList.add(MediaStore.Images.Media.RELATIVE_PATH)
+                projectionList.add(MediaStore.Images.Media.IS_PENDING)
             }
             val projection = projectionList.toTypedArray()
 
-            // Convert event start time from ms to seconds for DATE_ADDED
-            val minDateAddedSec = (activeWindowStartMs / 1000) - 60 // 1 min margin of safety
+            val minDateAddedSec = (captureSessionStartedAt / 1000) - 10
             val selection = "${MediaStore.Images.Media.DATE_ADDED} >= ?"
             val selectionArgs = arrayOf(minDateAddedSec.toString())
             val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
 
             val detected = mutableListOf<DetectedPhoto>()
+            var needsRetry = false
 
             try {
                 resolver.query(
@@ -111,52 +170,65 @@ class GalleryContentObserver(
                     val dateTakenCol = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)
                     val dataCol = cursor.getColumnIndex(MediaStore.Images.Media.DATA)
                     val bucketCol = cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+                    val mimeCol = cursor.getColumnIndex(MediaStore.Images.Media.MIME_TYPE)
+                    val sizeCol = cursor.getColumnIndex(MediaStore.Images.Media.SIZE)
                     val relPathCol = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                         cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH)
+                    } else -1
+                    val isPendingCol = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        cursor.getColumnIndex(MediaStore.Images.Media.IS_PENDING)
                     } else -1
 
                     while (cursor.moveToNext()) {
                         val id = cursor.getLong(idCol)
                         if (processedMediaIds.contains(id)) continue
 
-                        val path = if (dataCol >= 0) cursor.getString(dataCol) ?: "" else ""
-                        val bucket = if (bucketCol >= 0) cursor.getString(bucketCol) ?: "" else ""
-                        val relPath = if (relPathCol >= 0) cursor.getString(relPathCol) ?: "" else ""
-
-                        // Explicitly reject non-camera directories (screenshots, messaging, downloads)
-                        val isExcludedFolder = listOf("Screenshots", "WhatsApp", "Telegram", "Download", "Downloads", "Instagram", "Snapchat", "Twitter")
-                            .any { excluded ->
-                                path.contains(excluded, ignoreCase = true) ||
-                                bucket.contains(excluded, ignoreCase = true) ||
-                                relPath.contains(excluded, ignoreCase = true)
-                            }
-                        if (isExcludedFolder) continue
-
-                        // Verify camera roll origin across modern scoped-storage and legacy paths
-                        val isCameraPhoto = bucket.equals("Camera", ignoreCase = true) ||
-                                            bucket.equals("100ANDRO", ignoreCase = true) ||
-                                            bucket.equals("100MEDIA", ignoreCase = true) ||
-                                            relPath.startsWith("DCIM/Camera", ignoreCase = true) ||
-                                            relPath.startsWith("DCIM", ignoreCase = true) ||
-                                            path.contains("/DCIM/Camera", ignoreCase = true) ||
-                                            path.contains("/DCIM/", ignoreCase = true) ||
-                                            path.contains("Camera", ignoreCase = true)
-
-                        if (!isCameraPhoto) {
-                            continue
-                        }
-
                         val dateAddedSec = cursor.getLong(dateAddedCol)
-                        val dateTakenMs = if (dateTakenCol >= 0) cursor.getLong(dateTakenCol) else dateAddedSec * 1000
-                        val capturedAt = if (dateTakenMs > 0) dateTakenMs else dateAddedSec * 1000
+                        val dateTakenMs = if (dateTakenCol >= 0 && !cursor.isNull(dateTakenCol)) cursor.getLong(dateTakenCol) else null
+                        val path = if (dataCol >= 0) cursor.getString(dataCol) else null
+                        val bucket = if (bucketCol >= 0) cursor.getString(bucketCol) else null
+                        val mime = if (mimeCol >= 0) cursor.getString(mimeCol) else null
+                        val size = if (sizeCol >= 0) cursor.getLong(sizeCol) else 0L
+                        val relPath = if (relPathCol >= 0) cursor.getString(relPathCol) else null
+                        val isPending = if (isPendingCol >= 0) cursor.getInt(isPendingCol) == 1 else false
 
-                        val contentUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toString())
+                        val meta = MediaMetadata(
+                            mediaId = id,
+                            dateAddedSec = dateAddedSec,
+                            dateTakenMs = dateTakenMs,
+                            mimeType = mime,
+                            bucketDisplayName = bucket,
+                            relativePath = relPath,
+                            dataPath = path,
+                            size = size,
+                            isPending = isPending
+                        )
 
-                        // Extract EXIF & compress preview thumbnail
-                        val photo = processImageUri(resolver, contentUri, id, capturedAt)
-                        if (photo != null) {
-                            processedMediaIds.add(id)
-                            detected.add(photo)
+                        val eligibility = PhotoEligibilityChecker.evaluate(meta, captureSessionStartedAt, baselineMediaIds)
+
+                        when (eligibility) {
+                            EligibilityResult.ELIGIBLE -> {
+                                val capturedAt = PhotoEligibilityChecker.resolveCaptureTimestamp(meta)
+                                val contentUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toString())
+                                val photo = processImageUri(resolver, contentUri, id, capturedAt)
+                                if (photo != null) {
+                                    processedMediaIds.add(id)
+                                    pendingRetryMediaIds.remove(id)
+                                    detected.add(photo)
+                                } else {
+                                    pendingRetryMediaIds.add(id)
+                                    needsRetry = true
+                                }
+                            }
+                            EligibilityResult.DEFERRED_INCOMPLETE_ROW -> {
+                                pendingRetryMediaIds.add(id)
+                                needsRetry = true
+                            }
+                            else -> {
+                                // Rejected
+                                processedMediaIds.add(id)
+                                pendingRetryMediaIds.remove(id)
+                            }
                         }
                     }
                 }
@@ -164,8 +236,15 @@ class GalleryContentObserver(
                 e.printStackTrace()
             }
 
-            if (detected.isNotEmpty()) {
+            if (detected.isNotEmpty() && sessionState == CaptureSessionState.ACTIVE) {
                 onPhotosDetected(detected)
+            }
+
+            if (needsRetry && sessionState == CaptureSessionState.ACTIVE) {
+                delay(800)
+                if (sessionState == CaptureSessionState.ACTIVE) {
+                    scanRecentPhotos()
+                }
             }
         }
     }
@@ -229,7 +308,15 @@ class GalleryContentObserver(
             bitmap.recycle()
             val thumbBytes = bos.toByteArray()
 
+            val photoId = PhotoIdentity.generatePhotoId(
+                roomId = activeRoomId,
+                deviceId = activeDeviceId,
+                mediaId = mediaId,
+                capturedAt = capturedAt
+            )
+
             DetectedPhoto(
+                photoId = photoId,
                 uri = uri,
                 mediaId = mediaId,
                 capturedAt = capturedAt,

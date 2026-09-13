@@ -11,16 +11,21 @@ import com.frameroom.app.client.FrameRoomClient
 import com.frameroom.app.core.CryptoManager
 import com.frameroom.app.core.NetworkUtils
 import com.frameroom.app.core.Participant
+import com.frameroom.app.core.PhotoIdentity
 import com.frameroom.app.core.PhotoMeta
 import com.frameroom.app.core.QRPayload
 import com.frameroom.app.core.QRGenerator
 import com.frameroom.app.core.ReactionResponse
 import com.frameroom.app.core.Room
+import com.frameroom.app.core.SyncAckStatus
 import com.frameroom.app.core.WebSocketEvent
 import com.frameroom.app.server.FrameRoomServer
 import com.frameroom.app.server.HostServerService
+import com.frameroom.app.online.OnlineUploadManager
+import com.frameroom.app.online.OnlineUploadState
 import com.frameroom.app.watcher.DetectedPhoto
 import com.frameroom.app.watcher.GalleryContentObserver
+import com.frameroom.app.watcher.OutboxState
 import com.frameroom.app.watcher.SyncQueueManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +56,29 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val server = FrameRoomServer(application)
     private val client = FrameRoomClient()
-    private val syncQueueManager = SyncQueueManager()
+    private val syncQueueManager = SyncQueueManager(
+        context = application,
+        coroutineScope = viewModelScope
+    ).apply {
+        uploadExecutor = { record, thumbBytes ->
+            val targetIp = _hostIp.value ?: throw java.net.ConnectException("Host IP is not set")
+            val result = client.uploadThumbnail(
+                hostIp = targetIp,
+                port = hostPort,
+                photoId = record.photoId,
+                roomId = record.roomId,
+                thumbnailBytes = thumbBytes,
+                uploaderDeviceId = record.deviceId,
+                uploaderName = userDisplayName,
+                capturedAt = record.capturedAt,
+                cameraModel = record.cameraModel,
+                exposure = record.exposureTime,
+                iso = record.iso,
+                focalLength = record.focalLength
+            )
+            result.getOrThrow()
+        }
+    }
     private var galleryObserver: GalleryContentObserver? = null
 
     private var myKeyPair = CryptoManager.generateKeyPair()
@@ -87,6 +114,16 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
     val selectedPhoto = _selectedPhoto.asStateFlow()
 
     val pendingPhotos = syncQueueManager.pendingPhotos
+    val outboxRecords = syncQueueManager.records
+    val outboxStatus = syncQueueManager.outboxStatus
+
+    // Pipeline B: Optional Online Upload Subsystem
+    val onlineUploadManager = OnlineUploadManager(
+        context = application,
+        coroutineScope = viewModelScope
+    )
+    val onlineUploadRecords = onlineUploadManager.records
+    val onlineUploadStatus = onlineUploadManager.queueStatus
 
     private val _statusMessage = MutableStateFlow<String?>("Ready")
     val statusMessage = _statusMessage.asStateFlow()
@@ -110,6 +147,7 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
                 val ip = NetworkUtils.getLocalIpAddress() ?: "127.0.0.1"
                 _hostIp.value = ip
                 _isHost.value = true
+                syncQueueManager.setHostEndpoint(ip, hostPort)
 
                 myKeyPair = CryptoManager.generateKeyPair()
                 val createdRoom = server.start(
@@ -167,6 +205,7 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
             try {
                 _hostIp.value = payload.hostIp
                 _isHost.value = false
+                syncQueueManager.setHostEndpoint(payload.hostIp, payload.port)
 
                 myKeyPair = CryptoManager.generateKeyPair()
                 val joinResult = client.joinRoom(
@@ -236,6 +275,7 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
                 }
             }
             WebSocketEvent.TYPE_ROOM_CLOSED -> {
+                galleryObserver?.stopWatching()
                 _statusMessage.value = "The event room has been closed by host"
             }
         }
@@ -247,10 +287,18 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
             context = getApplication(),
             coroutineScope = viewModelScope,
             onPhotosDetected = { detected ->
-                syncQueueManager.addPendingPhotos(detected)
+                syncQueueManager.enqueuePhotos(
+                    photos = detected,
+                    roomId = _room.value?.roomId ?: "local",
+                    deviceId = deviceId
+                )
             }
         ).apply {
-            startWatching(activeWindowStartMs)
+            startWatching(
+                eventStartMs = activeWindowStartMs,
+                roomId = _room.value?.roomId ?: "local",
+                deviceId = deviceId
+            )
         }
     }
 
@@ -258,23 +306,7 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
      * User taps "Sync Now" on BulkConfirmPill.
      */
     fun confirmPendingPhotos() {
-        val targetIp = _hostIp.value ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            syncQueueManager.confirmAndUploadAll { photo ->
-                client.uploadThumbnail(
-                    hostIp = targetIp,
-                    port = hostPort,
-                    thumbnailBytes = photo.thumbnailBytes,
-                    uploaderDeviceId = deviceId,
-                    uploaderName = userDisplayName,
-                    capturedAt = photo.capturedAt,
-                    cameraModel = photo.cameraModel,
-                    exposure = photo.exposureTime,
-                    iso = photo.iso,
-                    focalLength = photo.focalLength
-                )
-            }
-        }
+        syncQueueManager.triggerQueueProcessing()
     }
 
     fun dismissPendingPhotos() {
@@ -283,12 +315,14 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
 
     /**
      * Fallback manual upload if user picks photos from system gallery.
+     * Always routes through SyncQueueManager to guarantee durability.
      */
     fun uploadManualPhotos(uris: List<Uri>) {
-        val targetIp = _hostIp.value ?: return
+        val currentRoomId = _room.value?.roomId ?: "manual"
         val resolver = getApplication<Application>().contentResolver
 
         viewModelScope.launch(Dispatchers.IO) {
+            val detectedList = mutableListOf<DetectedPhoto>()
             for (uri in uris) {
                 try {
                     val stream = resolver.openInputStream(uri) ?: continue
@@ -298,17 +332,33 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
                     val bytes = bos.toByteArray()
                     bitmap.recycle()
 
-                    client.uploadThumbnail(
-                        hostIp = targetIp,
-                        port = hostPort,
-                        thumbnailBytes = bytes,
-                        uploaderDeviceId = deviceId,
-                        uploaderName = userDisplayName,
-                        capturedAt = System.currentTimeMillis()
+                    val capturedAt = System.currentTimeMillis()
+                    val mediaId = try {
+                        android.content.ContentUris.parseId(uri)
+                    } catch (e: Exception) {
+                        capturedAt
+                    }
+                    val photoId = PhotoIdentity.generatePhotoId(currentRoomId, deviceId, mediaId, capturedAt)
+
+                    detectedList.add(
+                        DetectedPhoto(
+                            photoId = photoId,
+                            uri = uri,
+                            mediaId = mediaId,
+                            capturedAt = capturedAt,
+                            thumbnailBytes = bytes
+                        )
                     )
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+            }
+            if (detectedList.isNotEmpty()) {
+                syncQueueManager.enqueuePhotos(
+                    photos = detectedList,
+                    roomId = currentRoomId,
+                    deviceId = deviceId
+                )
             }
         }
     }
@@ -341,6 +391,7 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
             client.closeRoom(targetIp, hostPort, deviceId)
             HostServerService.stop(getApplication())
             galleryObserver?.stopWatching()
+            syncQueueManager.setHostEndpoint(null, hostPort)
             withContext(Dispatchers.Main) {
                 _statusMessage.value = "Room closed and frozen to archive"
             }
@@ -358,6 +409,72 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    /**
+     * Pipeline B: Explicit user-initiated online upload.
+     * Never triggered automatically. Only selected photos enter this queue.
+     */
+    fun uploadSelectedOnline(photoIds: List<String>) {
+        val currentRoomId = _room.value?.roomId ?: "event"
+        val outbox = syncQueueManager.records.value
+
+        for (photoId in photoIds) {
+            val localRecord = outbox[photoId]
+            val mediaId = localRecord?.mediaId ?: System.currentTimeMillis()
+            val mediaUri = localRecord?.mediaUri ?: ""
+            val originalPath = localRecord?.thumbnailPath
+            val thumbPath = localRecord?.thumbnailPath
+
+            onlineUploadManager.enqueueForUpload(
+                photoId = photoId,
+                roomId = currentRoomId,
+                mediaId = mediaId,
+                mediaUri = mediaUri,
+                originalPath = originalPath,
+                thumbnailPath = thumbPath
+            )
+        }
+        _statusMessage.value = "Selected ${photoIds.size} photo(s) queued for online upload"
+    }
+
+    fun retryOnlineUpload(photoId: String) {
+        onlineUploadManager.retryUpload(photoId)
+    }
+
+    fun dismissOnlineUpload(photoId: String) {
+        onlineUploadManager.dismissUpload(photoId)
+    }
+
+    /**
+     * Returns paired statuses: (Local Status, Optional Online Status).
+     * Online failure never impacts Local status.
+     */
+    fun getPhotoSyncStatus(photoId: String): Pair<String, String?> {
+        val localState = syncQueueManager.records.value[photoId]?.state
+        val onlineState = onlineUploadManager.records.value[photoId]?.state
+
+        val localLabel = when (localState) {
+            OutboxState.ACKED -> "LOCAL SYNCED"
+            OutboxState.SENDING -> "LOCAL SYNCING"
+            OutboxState.QUEUED -> "LOCAL QUEUED"
+            OutboxState.WAITING_FOR_HOST -> "LOCAL WAITING"
+            OutboxState.FAILED_RETRYABLE -> "LOCAL RETRYING"
+            OutboxState.FAILED_PERMANENT -> "LOCAL FAILED"
+            else -> "LOCAL READY"
+        }
+
+        val onlineLabel = when (onlineState) {
+            OnlineUploadState.UPLOADED -> "ONLINE UPLOADED"
+            OnlineUploadState.UPLOADING -> "ONLINE UPLOADING"
+            OnlineUploadState.QUEUED,
+            OnlineUploadState.WAITING_FOR_INTERNET -> "ONLINE PENDING"
+            OnlineUploadState.FAILED_RETRYABLE,
+            OnlineUploadState.FAILED_PERMANENT -> "ONLINE FAILED"
+            else -> null // Not selected for online upload
+        }
+
+        return Pair(localLabel, onlineLabel)
     }
 
     override fun onCleared() {

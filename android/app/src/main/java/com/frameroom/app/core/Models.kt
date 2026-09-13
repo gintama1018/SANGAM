@@ -71,6 +71,22 @@ data class ReactionResponse(
 )
 
 @Serializable
+enum class SyncAckStatus {
+    STORED,
+    DUPLICATE_ACCEPTED,
+    REJECTED_CLOSED_ROOM,
+    REJECTED_INVALID_PAYLOAD
+}
+
+@Serializable
+data class SyncAck(
+    val photoId: String,
+    val status: SyncAckStatus,
+    val serverTimestamp: Long = System.currentTimeMillis()
+)
+
+
+@Serializable
 data class WebSocketEvent(
     val type: String,
     val payload: String

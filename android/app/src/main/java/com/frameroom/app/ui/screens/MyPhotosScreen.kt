@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
@@ -323,7 +324,7 @@ fun MyPhotosScreen(
                                 )
                             }
 
-                            // All Button
+                            // Backup Online Button
                             Row(
                                 modifier = Modifier
                                     .weight(1f)
@@ -331,25 +332,31 @@ fun MyPhotosScreen(
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(SurfaceContainerHighest)
                                     .clickable {
-                                        Toast.makeText(context, "Saving All 42 photos...", Toast.LENGTH_SHORT).show()
+                                        val idsToUpload = if (selectedCards.isNotEmpty()) {
+                                            selectedCards.toList()
+                                        } else {
+                                            viewModel.photos.value.map { it.photoId }
+                                        }
+                                        viewModel.uploadSelectedOnline(idsToUpload)
+                                        Toast.makeText(context, "Queued ${idsToUpload.size} photo(s) for online backup", Toast.LENGTH_SHORT).show()
                                     }
                                     .padding(horizontal = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.CloudDownload,
+                                    imageVector = Icons.Default.CloudUpload,
                                     contentDescription = null,
                                     tint = IndigoPrimary,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "All (42)",
+                                    text = "Backup Online",
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         color = OnSurface,
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 12.sp
+                                        fontSize = 11.sp
                                     )
                                 )
                             }
