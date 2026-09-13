@@ -17,8 +17,12 @@ data class Room(
     val closedAt: Long? = null,
     val hostDeviceId: String,
     val hostPublicKey: String,
-    val sessionToken: String = ""
-)
+    val sessionToken: String = "",
+    @kotlinx.serialization.Transient
+    val hostSecret: String? = null
+) {
+    fun toPublicRoom(): Room = copy(hostSecret = null)
+}
 
 @Serializable
 data class Participant(

@@ -12,8 +12,13 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -252,12 +257,12 @@ class PhotoIdentityAndDeduplicationTest {
     // 10. Closed room returns REJECTED_CLOSED_ROOM.
     @Test
     fun testClosedRoomReturnsRejectedClosedRoom() = runBlocking {
-        val (_, cl) = ensureServerStarted()
+        val (srv, cl) = ensureServerStarted()
         val photoId = PhotoIdentity.generatePhotoId("FR-TEST", "guest-1", 404L, 1710000000000L)
         val jpeg = createValidSampleJpeg()
 
-        // Close the room as host
-        val closeResult = cl.closeRoom("127.0.0.1", testPort, testHostDeviceId)
+        // Close the room as host using hostSecret
+        val closeResult = cl.closeRoom("127.0.0.1", testPort, hostSecret = srv.room.value?.hostSecret ?: "")
         assertTrue(closeResult.isSuccess)
 
         val uploadResult = cl.uploadThumbnail(
@@ -302,7 +307,7 @@ class PhotoIdentityAndDeduplicationTest {
     // 12. Request without or with invalid session token is rejected with Unauthorized.
     @Test
     fun testUnauthorizedRequestRejectedWithoutSessionToken() = runBlocking {
-        val (srv, _) = ensureServerStarted()
+        ensureServerStarted()
         val rogueClient = FrameRoomClient() // no session token
 
         val joinResult = rogueClient.joinRoom(
@@ -434,5 +439,78 @@ class PhotoIdentityAndDeduplicationTest {
         cl.toggleReaction("127.0.0.1", testPort, photoId, "reactor-1")
         assertTrue("Authenticated WebSocket must receive live broadcast event", eventReceivedLatch.await(3, TimeUnit.SECONDS))
         validClient.close()
+    }
+
+    // 16. Guest cannot close room with hostDeviceId or bogus secret; only host with hostSecret can close room.
+    @Test
+    fun testGuestCannotCloseRoomWithHostDeviceIdOrBogusSecret() = runBlocking {
+        // Start fresh server
+        tearDown()
+        val (srv, cl) = ensureServerStarted()
+        val guestClient = FrameRoomClient().apply {
+            sessionToken = srv.room.value?.sessionToken
+        }
+
+        // Attempt 1: Guest tries to close room with host's deviceId (previous spoof vector)
+        val spoofAttempt1 = guestClient.closeRoom("127.0.0.1", testPort, hostSecret = testHostDeviceId)
+        assertTrue("Close attempt using hostDeviceId must fail", spoofAttempt1.isFailure)
+        assertNull("Room must remain active", srv.room.value?.closedAt)
+
+        // Attempt 2: Guest tries to close room with bogus secret
+        val spoofAttempt2 = guestClient.closeRoom("127.0.0.1", testPort, hostSecret = "bogus_secret_9999")
+        assertTrue("Close attempt using bogus secret must fail", spoofAttempt2.isFailure)
+        assertNull("Room must remain active", srv.room.value?.closedAt)
+
+        // Attempt 3: Guest tries to close room with empty secret
+        val spoofAttempt3 = guestClient.closeRoom("127.0.0.1", testPort, hostSecret = "")
+        assertTrue("Close attempt using empty secret must fail", spoofAttempt3.isFailure)
+        assertNull("Room must remain active", srv.room.value?.closedAt)
+
+        // Legitimate host closes room using private hostSecret
+        val legitSecret = srv.room.value?.hostSecret ?: ""
+        assertTrue("Host secret must not be empty", legitSecret.isNotBlank())
+        val legitClose = cl.closeRoom("127.0.0.1", testPort, hostSecret = legitSecret)
+        assertTrue("Legitimate host with hostSecret must succeed in closing room", legitClose.isSuccess)
+        assertNotNull("Room must now be closed", srv.room.value?.closedAt)
+
+        guestClient.close()
+    }
+
+    // 17. Host secret never leaks in JoinResponse, public Room object, or serialized JSON.
+    @Test
+    fun testHostSecretNeverLeaksInJoinResponseOrJson() = runBlocking {
+        // Start fresh server
+        tearDown()
+        val (srv, _) = ensureServerStarted()
+        val guestClient = FrameRoomClient().apply {
+            sessionToken = srv.room.value?.sessionToken
+        }
+
+        val joinResult = guestClient.joinRoom(
+            hostIp = "127.0.0.1",
+            port = testPort,
+            deviceId = "guest-leak-verifier",
+            displayName = "Leak Verifier",
+            clientPublicKey = "leak_key"
+        )
+        assertTrue("Join with valid session token must succeed", joinResult.isSuccess)
+        val joinResponse = joinResult.getOrThrow()
+
+        // 1. JoinResponse.room must have null hostSecret
+        assertNull("JoinResponse room must NOT contain hostSecret", joinResponse.room.hostSecret)
+
+        // 2. Serialized JoinResponse must not contain hostSecret field name or actual secret
+        val hostSecretValue = srv.room.value?.hostSecret ?: ""
+        val jsonString = Json.encodeToString(joinResponse)
+        assertFalse("Serialized JoinResponse JSON must never contain 'hostSecret'", jsonString.contains("hostSecret"))
+        assertFalse("Serialized JoinResponse JSON must never contain secret value", jsonString.contains(hostSecretValue))
+
+        // 3. toPublicRoom() must strip hostSecret
+        val publicRoom = srv.room.value!!.toPublicRoom()
+        assertNull("toPublicRoom() hostSecret must be null", publicRoom.hostSecret)
+        val publicRoomJson = Json.encodeToString(publicRoom)
+        assertFalse("Serialized public room JSON must never contain 'hostSecret'", publicRoomJson.contains("hostSecret"))
+
+        guestClient.close()
     }
 }

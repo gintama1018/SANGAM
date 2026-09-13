@@ -91,11 +91,13 @@ class FrameRoomServer(
         hostDisplayName: String,
         hostPublicKey: String,
         port: Int = 8080,
-        sessionToken: String? = null
+        sessionToken: String? = null,
+        hostSecret: String? = null
     ): Room {
         stop()
 
         val token = sessionToken ?: java.util.UUID.randomUUID().toString()
+        val secret = hostSecret ?: ("sec_" + java.util.UUID.randomUUID().toString())
         val roomId = "FR-" + (1000..9999).random()
         val createdRoom = Room(
             roomId = roomId,
@@ -103,7 +105,8 @@ class FrameRoomServer(
             activeWindowStart = System.currentTimeMillis(),
             hostDeviceId = hostDeviceId,
             hostPublicKey = hostPublicKey,
-            sessionToken = token
+            sessionToken = token,
+            hostSecret = secret
         )
         _room.value = createdRoom
 
@@ -155,7 +158,7 @@ class FrameRoomServer(
 
                     call.respond(
                         JoinResponse(
-                            room = currentRoom,
+                            room = currentRoom.toPublicRoom(),
                             participants = _participants.value,
                             photos = _photos.value
                         )
@@ -364,17 +367,17 @@ class FrameRoomServer(
                         call.respond(HttpStatusCode.Unauthorized, "Invalid or missing session token")
                         return@post
                     }
-                    val hostId = call.request.headers["X-Host-Device-Id"]
+                    val incomingSecret = call.request.headers["X-Host-Secret"]
                     val currentRoom = _room.value
-                    if (currentRoom == null || currentRoom.hostDeviceId != hostId) {
-                        call.respond(HttpStatusCode.Unauthorized, "Only the host can close this room")
+                    if (currentRoom == null || incomingSecret.isNullOrBlank() || incomingSecret != currentRoom.hostSecret) {
+                        call.respond(HttpStatusCode.Unauthorized, "Only the host with valid secret can close this room")
                         return@post
                     }
 
                     val closed = currentRoom.copy(closedAt = System.currentTimeMillis())
                     _room.value = closed
-                    broadcastEvent(WebSocketEvent.TYPE_ROOM_CLOSED, json.encodeToString(closed))
-                    call.respond(closed)
+                    broadcastEvent(WebSocketEvent.TYPE_ROOM_CLOSED, json.encodeToString(closed.toPublicRoom()))
+                    call.respond(closed.toPublicRoom())
                 }
 
                 // Embedded Spectator Web Page (Stretch Goal - Live Projector Wall)

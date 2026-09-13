@@ -84,6 +84,7 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
     private var galleryObserver: GalleryContentObserver? = null
 
     private var myKeyPair = CryptoManager.generateKeyPair()
+    private var hostSecret: String? = null
 
     // Navigation & UI state
     private val _currentScreen = MutableStateFlow(AppScreen.WELCOME)
@@ -162,7 +163,8 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
                     hostPublicKey = myKeyPair.publicKeyBase64,
                     port = hostPort
                 )
-                _room.value = createdRoom
+                hostSecret = createdRoom.hostSecret
+                _room.value = createdRoom.toPublicRoom()
                 _sessionToken.value = createdRoom.sessionToken
                 client.sessionToken = createdRoom.sessionToken
                 _participants.value = server.participants.value
@@ -400,8 +402,9 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
     fun closeRoom() {
         val targetIp = _hostIp.value ?: return
         val token = _sessionToken.value ?: _room.value?.sessionToken
+        val secret = this.hostSecret ?: ""
         viewModelScope.launch(Dispatchers.IO) {
-            client.closeRoom(targetIp, hostPort, deviceId, sessionToken = token)
+            client.closeRoom(targetIp, hostPort, hostSecret = secret, sessionToken = token)
             HostServerService.stop(getApplication())
             galleryObserver?.stopWatching()
             syncQueueManager.setHostEndpoint(null, hostPort)

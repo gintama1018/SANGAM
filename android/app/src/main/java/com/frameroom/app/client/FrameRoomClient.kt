@@ -188,14 +188,14 @@ class FrameRoomClient : Closeable {
     suspend fun closeRoom(
         hostIp: String,
         port: Int,
-        hostDeviceId: String,
+        hostSecret: String,
         sessionToken: String? = null
     ): Result<Room> {
         return try {
             val token = sessionToken ?: this.sessionToken
             val response = httpClient.post("http://$hostIp:$port/api/room/close") {
                 token?.let { header("X-Session-Token", it) }
-                header("X-Host-Device-Id", hostDeviceId)
+                header("X-Host-Secret", hostSecret)
             }.body<Room>()
             Result.success(response)
         } catch (e: Exception) {
