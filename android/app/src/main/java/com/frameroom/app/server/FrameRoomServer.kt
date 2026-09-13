@@ -54,6 +54,9 @@ class FrameRoomServer(
     private val context: Context? = null,
     baseDir: File? = null
 ) {
+    companion object {
+        val VALID_PHOTO_ID_REGEX = Regex("^[a-zA-Z0-9_]{1,128}$")
+    }
 
     private var serverEngine: ApplicationEngine? = null
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -192,6 +195,18 @@ class FrameRoomServer(
                         PhotoIdentity.generatePhotoId(resolvedRoomId, uploaderDeviceId, System.currentTimeMillis(), capturedAt)
                     }
 
+                    if (!VALID_PHOTO_ID_REGEX.matches(photoId)) {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            SyncAck(
+                                photoId = photoId,
+                                status = SyncAckStatus.REJECTED_INVALID_PAYLOAD,
+                                serverTimestamp = System.currentTimeMillis()
+                            )
+                        )
+                        return@post
+                    }
+
                     if (currentRoom == null || currentRoom.closedAt != null) {
                         call.respond(
                             HttpStatusCode.Forbidden,
@@ -238,6 +253,17 @@ class FrameRoomServer(
                     }
 
                     val thumbFile = File(thumbnailsDir, "$photoId.jpg")
+                    if (!thumbFile.canonicalPath.startsWith(thumbnailsDir.canonicalPath)) {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            SyncAck(
+                                photoId = photoId,
+                                status = SyncAckStatus.REJECTED_INVALID_PAYLOAD,
+                                serverTimestamp = System.currentTimeMillis()
+                            )
+                        )
+                        return@post
+                    }
                     thumbFile.writeBytes(bytes)
 
                     val meta = PhotoMeta(
@@ -282,6 +308,10 @@ class FrameRoomServer(
                         return@get
                     }
                     val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                    if (!VALID_PHOTO_ID_REGEX.matches(id)) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid photo ID format")
+                        return@get
+                    }
                     val file = File(thumbnailsDir, "$id.jpg")
                     if (!file.exists()) {
                         call.respond(HttpStatusCode.NotFound)
@@ -298,9 +328,17 @@ class FrameRoomServer(
                         return@post
                     }
                     val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+                    if (!VALID_PHOTO_ID_REGEX.matches(id)) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid photo ID format")
+                        return@post
+                    }
                     val channel = call.receiveChannel()
                     val bytes = channel.toByteArray()
                     val file = File(originalsDir, "$id.jpg")
+                    if (!file.canonicalPath.startsWith(originalsDir.canonicalPath)) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid photo ID format")
+                        return@post
+                    }
                     file.writeBytes(bytes)
                     call.respond(HttpStatusCode.OK, "Stored full-res")
                 }
@@ -313,6 +351,10 @@ class FrameRoomServer(
                         return@get
                     }
                     val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                    if (!VALID_PHOTO_ID_REGEX.matches(id)) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid photo ID format")
+                        return@get
+                    }
                     val original = File(originalsDir, "$id.jpg")
                     if (original.exists()) {
                         call.respondBytes(original.readBytes(), ContentType.Image.JPEG)
@@ -335,6 +377,10 @@ class FrameRoomServer(
                         return@post
                     }
                     val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+                    if (!VALID_PHOTO_ID_REGEX.matches(id)) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid photo ID format")
+                        return@post
+                    }
                     val req = call.receive<ReactionRequest>()
                     val userSet = reactionsMap.computeIfAbsent(id) { Collections.synchronizedSet(mutableSetOf()) }
 

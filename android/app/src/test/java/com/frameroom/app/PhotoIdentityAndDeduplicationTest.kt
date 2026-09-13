@@ -2,6 +2,7 @@ package com.frameroom.app
 
 import com.frameroom.app.client.FrameRoomClient
 import com.frameroom.app.core.PhotoIdentity
+import com.frameroom.app.core.SyncAck
 import com.frameroom.app.core.SyncAckStatus
 import com.frameroom.app.core.WebSocketEvent
 import com.frameroom.app.server.FrameRoomServer
@@ -17,6 +18,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Before
@@ -512,5 +514,66 @@ class PhotoIdentityAndDeduplicationTest {
         assertFalse("Serialized public room JSON must never contain 'hostSecret'", publicRoomJson.contains("hostSecret"))
 
         guestClient.close()
+    }
+
+    // 18. Path traversal attempt via X-Photo-Id header is rejected with 400 and no file is created outside thumbnailsDir.
+    @Test
+    fun testPathTraversalPhotoIdRejectedAndNoFileWrittenOutsideDirectory() = runBlocking {
+        val (srv, _) = ensureServerStarted()
+        val maliciousIds = listOf(
+            "../evil_escape",
+            "..%2Fevil_url_encoded",
+            "../../evil_parent",
+            "evil/nested",
+            "evil\\windows",
+            "invalid!char@id"
+        )
+
+        for (maliciousId in maliciousIds) {
+            val conn = (java.net.URL("http://127.0.0.1:$testPort/api/photo/thumbnail").openConnection() as java.net.HttpURLConnection).apply {
+                requestMethod = "POST"
+                setRequestProperty("X-Session-Token", srv.room.value?.sessionToken)
+                setRequestProperty("X-Photo-Id", maliciousId)
+                doOutput = true
+            }
+            conn.outputStream.use { it.write(createValidSampleJpeg()) }
+            assertEquals("PhotoId '$maliciousId' must be rejected with 400 Bad Request", 400, conn.responseCode)
+
+            // Parse response body to verify REJECTED_INVALID_PAYLOAD status
+            val errorResponse = conn.errorStream.bufferedReader().use { it.readText() }
+            val ack = Json.decodeFromString<SyncAck>(errorResponse)
+            assertEquals(SyncAckStatus.REJECTED_INVALID_PAYLOAD, ack.status)
+        }
+
+        // Verify no malicious files were written outside the thumbnails directory
+        val outsideEscapedFile = File(tempDir, "evil_escape.jpg")
+        assertFalse("No file should exist outside thumbnails directory", outsideEscapedFile.exists())
+        val parentEscapedFile = File(tempDir?.parentFile, "evil_escape.jpg")
+        assertFalse("No file should exist in parent directory", parentEscapedFile.exists())
+    }
+
+    // 19. Malformed or path-traversal photo ID in path parameters rejected with 400 Bad Request.
+    @Test
+    fun testMalformedPhotoIdInPathParametersRejected() = runBlocking {
+        val (srv, _) = ensureServerStarted()
+        val token = srv.room.value?.sessionToken
+
+        // 1. GET /api/photo/{id}/thumbnail with traversal / invalid characters
+        val badThumbConn = (java.net.URL("http://127.0.0.1:$testPort/api/photo/invalid..id/thumbnail?token=$token").openConnection() as java.net.HttpURLConnection)
+        assertEquals(400, badThumbConn.responseCode)
+
+        // 2. GET /api/photo/{id}/full with invalid characters
+        val badFullConn = (java.net.URL("http://127.0.0.1:$testPort/api/photo/evil!char/full?token=$token").openConnection() as java.net.HttpURLConnection)
+        assertEquals(400, badFullConn.responseCode)
+
+        // 3. POST /api/photo/{id}/react with invalid characters
+        val badReactConn = (java.net.URL("http://127.0.0.1:$testPort/api/photo/bad%20id/react").openConnection() as java.net.HttpURLConnection).apply {
+            requestMethod = "POST"
+            setRequestProperty("X-Session-Token", token)
+            setRequestProperty("Content-Type", "application/json")
+            doOutput = true
+        }
+        badReactConn.outputStream.use { it.write("""{"deviceId":"test-dev"}""".toByteArray()) }
+        assertEquals(400, badReactConn.responseCode)
     }
 }
