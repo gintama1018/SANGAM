@@ -1167,9 +1167,11 @@ fun PhotoThumbnailCard(
     isLiked: Boolean,
     onPhotoClick: () -> Unit,
     onReactionClick: () -> Unit,
+    sessionToken: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val thumbUrl = "http://$hostIp:$port/api/photo/${photo.photoId}/thumbnail"
+    val tokenQuery = if (!sessionToken.isNullOrEmpty()) "?token=$sessionToken" else ""
+    val thumbUrl = "http://$hostIp:$port/api/photo/${photo.photoId}/thumbnail$tokenQuery"
 
     Box(
         modifier = modifier

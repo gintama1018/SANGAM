@@ -47,18 +47,24 @@ class FrameRoomClient : Closeable {
     private var wsJob: Job? = null
     private var wsSession: DefaultClientWebSocketSession? = null
 
+    var sessionToken: String? = null
+
     suspend fun joinRoom(
         hostIp: String,
         port: Int,
         deviceId: String,
         displayName: String,
-        clientPublicKey: String
+        clientPublicKey: String,
+        sessionToken: String? = null
     ): Result<JoinResponse> {
         return try {
+            val token = sessionToken ?: this.sessionToken
             val response = httpClient.post("http://$hostIp:$port/api/join") {
                 contentType(ContentType.Application.Json)
+                token?.let { header("X-Session-Token", it) }
                 setBody(JoinRequest(deviceId, displayName, clientPublicKey))
             }.body<JoinResponse>()
+            this.sessionToken = token ?: response.room.sessionToken
             Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)
@@ -69,13 +75,23 @@ class FrameRoomClient : Closeable {
         hostIp: String,
         port: Int,
         scope: CoroutineScope,
+        sessionToken: String? = null,
         onEvent: (WebSocketEvent) -> Unit,
         onDisconnected: () -> Unit = {}
     ) {
+        val token = sessionToken ?: this.sessionToken
         stopWebSocket()
         wsJob = scope.launch(Dispatchers.IO) {
             try {
-                httpClient.webSocket(host = hostIp, port = port, path = "/ws") {
+                val queryParam = if (!token.isNullOrEmpty()) "?token=$token" else ""
+                httpClient.webSocket(
+                    host = hostIp,
+                    port = port,
+                    path = "/ws$queryParam",
+                    request = {
+                        token?.let { header("X-Session-Token", it) }
+                    }
+                ) {
                     wsSession = this
                     for (frame in incoming) {
                         if (frame is Frame.Text) {
@@ -118,11 +134,14 @@ class FrameRoomClient : Closeable {
         cameraModel: String? = null,
         exposure: String? = null,
         iso: String? = null,
-        focalLength: String? = null
+        focalLength: String? = null,
+        sessionToken: String? = null
     ): Result<SyncAck> {
         return try {
+            val token = sessionToken ?: this.sessionToken
             val response = httpClient.post("http://$hostIp:$port/api/photo/thumbnail") {
                 contentType(ContentType.Image.JPEG)
+                token?.let { header("X-Session-Token", it) }
                 header("X-Photo-Id", photoId)
                 roomId?.let { header("X-Room-Id", it) }
                 header("X-Device-Id", uploaderDeviceId)
@@ -150,11 +169,14 @@ class FrameRoomClient : Closeable {
         hostIp: String,
         port: Int,
         photoId: String,
-        deviceId: String
+        deviceId: String,
+        sessionToken: String? = null
     ): Result<ReactionResponse> {
         return try {
+            val token = sessionToken ?: this.sessionToken
             val response = httpClient.post("http://$hostIp:$port/api/photo/$photoId/react") {
                 contentType(ContentType.Application.Json)
+                token?.let { header("X-Session-Token", it) }
                 setBody(ReactionRequest(deviceId))
             }.body<ReactionResponse>()
             Result.success(response)
@@ -166,10 +188,13 @@ class FrameRoomClient : Closeable {
     suspend fun closeRoom(
         hostIp: String,
         port: Int,
-        hostDeviceId: String
+        hostDeviceId: String,
+        sessionToken: String? = null
     ): Result<Room> {
         return try {
+            val token = sessionToken ?: this.sessionToken
             val response = httpClient.post("http://$hostIp:$port/api/room/close") {
+                token?.let { header("X-Session-Token", it) }
                 header("X-Host-Device-Id", hostDeviceId)
             }.body<Room>()
             Result.success(response)

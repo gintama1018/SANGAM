@@ -95,7 +95,10 @@ class RealDeviceIntegrationAndFailureTest {
     @Test
     fun testLevel1_goldenPathEndToEndSync() = runBlocking {
         val (hostServer, port) = startHostServer()
-        val guestClient = FrameRoomClient().also { clients.add(it) }
+        val guestClient = FrameRoomClient().also {
+            clients.add(it)
+            it.sessionToken = hostServer.room.value?.sessionToken
+        }
         val guestDir = File(rootTempDir, "guest_device_b").apply { mkdirs() }
         val scope = CoroutineScope(Dispatchers.IO).also { testScope = it }
 
@@ -174,7 +177,10 @@ class RealDeviceIntegrationAndFailureTest {
     @Test
     fun testLevel2_disconnectCaptureRestartReconnectNoDuplicates() = runBlocking {
         val (hostServer, port) = startHostServer()
-        val guestClient = FrameRoomClient().also { clients.add(it) }
+        val guestClient = FrameRoomClient().also {
+            clients.add(it)
+            it.sessionToken = hostServer.room.value?.sessionToken
+        }
         val guestDir = File(rootTempDir, "guest_level_2").apply { mkdirs() }
         val scope1 = CoroutineScope(Dispatchers.IO)
 
@@ -261,7 +267,10 @@ class RealDeviceIntegrationAndFailureTest {
     @Test
     fun testLevel3_crashDuringActiveTransferRecoversAndAcks() = runBlocking {
         val (hostServer, port) = startHostServer()
-        val guestClient = FrameRoomClient().also { clients.add(it) }
+        val guestClient = FrameRoomClient().also {
+            clients.add(it)
+            it.sessionToken = hostServer.room.value?.sessionToken
+        }
         val guestDir = File(rootTempDir, "guest_level_3").apply { mkdirs() }
 
         // Setup repository directly with simulated crashed in-flight records
@@ -425,7 +434,10 @@ class RealDeviceIntegrationAndFailureTest {
 
             val jobs = (1..clientCount).map { clientIndex ->
                 scope.launch {
-                    val client = FrameRoomClient().also { synchronized(clients) { clients.add(it) } }
+                    val client = FrameRoomClient().also {
+                        synchronized(clients) { clients.add(it) }
+                        it.sessionToken = hostServer.room.value?.sessionToken
+                    }
                     val clientDeviceId = "dev_sim_${clientCount}_$clientIndex"
 
                     for (p in 1..photosPerClient) {
@@ -478,7 +490,10 @@ class RealDeviceIntegrationAndFailureTest {
     @Test
     fun testLevel6_onlinePipelineIndependence() = runBlocking {
         val (hostServer, port) = startHostServer()
-        val guestClient = FrameRoomClient().also { clients.add(it) }
+        val guestClient = FrameRoomClient().also {
+            clients.add(it)
+            it.sessionToken = hostServer.room.value?.sessionToken
+        }
         val guestDir = File(rootTempDir, "guest_l6").apply { mkdirs() }
         val onlineDir = File(rootTempDir, "guest_l6_online").apply { mkdirs() }
         val scope = CoroutineScope(Dispatchers.IO).also { testScope = it }

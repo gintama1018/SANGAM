@@ -31,7 +31,9 @@ import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.cio.toByteArray
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
+import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,17 +90,20 @@ class FrameRoomServer(
         hostDeviceId: String,
         hostDisplayName: String,
         hostPublicKey: String,
-        port: Int = 8080
+        port: Int = 8080,
+        sessionToken: String? = null
     ): Room {
         stop()
 
+        val token = sessionToken ?: java.util.UUID.randomUUID().toString()
         val roomId = "FR-" + (1000..9999).random()
         val createdRoom = Room(
             roomId = roomId,
             name = roomName,
             activeWindowStart = System.currentTimeMillis(),
             hostDeviceId = hostDeviceId,
-            hostPublicKey = hostPublicKey
+            hostPublicKey = hostPublicKey,
+            sessionToken = token
         )
         _room.value = createdRoom
 
@@ -121,6 +126,12 @@ class FrameRoomServer(
             routing {
                 // Handshake & Join
                 post("/api/join") {
+                    val incomingToken = call.request.headers["X-Session-Token"]
+                    if (incomingToken != _room.value?.sessionToken) {
+                        call.respond(HttpStatusCode.Unauthorized, "Invalid or missing session token")
+                        return@post
+                    }
+
                     val currentRoom = _room.value
                     if (currentRoom == null || currentRoom.closedAt != null) {
                         call.respond(HttpStatusCode.Forbidden, "Room is not active")
@@ -153,6 +164,12 @@ class FrameRoomServer(
 
                 // Thumbnail Upload
                 post("/api/photo/thumbnail") {
+                    val incomingToken = call.request.headers["X-Session-Token"]
+                    if (incomingToken != _room.value?.sessionToken) {
+                        call.respond(HttpStatusCode.Unauthorized, "Invalid or missing session token")
+                        return@post
+                    }
+
                     val photoIdHeader = call.request.headers["X-Photo-Id"]
                     val roomIdHeader = call.request.headers["X-Room-Id"]
                     val uploaderDeviceId = call.request.headers["X-Device-Id"] ?: "unknown"
@@ -256,6 +273,11 @@ class FrameRoomServer(
 
                 // Get Thumbnail
                 get("/api/photo/{id}/thumbnail") {
+                    val incomingToken = call.request.headers["X-Session-Token"] ?: call.request.queryParameters["token"]
+                    if (incomingToken != _room.value?.sessionToken) {
+                        call.respond(HttpStatusCode.Unauthorized, "Invalid or missing session token")
+                        return@get
+                    }
                     val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
                     val file = File(thumbnailsDir, "$id.jpg")
                     if (!file.exists()) {
@@ -267,6 +289,11 @@ class FrameRoomServer(
 
                 // Upload Full-Res
                 post("/api/photo/{id}/full") {
+                    val incomingToken = call.request.headers["X-Session-Token"]
+                    if (incomingToken != _room.value?.sessionToken) {
+                        call.respond(HttpStatusCode.Unauthorized, "Invalid or missing session token")
+                        return@post
+                    }
                     val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
                     val channel = call.receiveChannel()
                     val bytes = channel.toByteArray()
@@ -277,6 +304,11 @@ class FrameRoomServer(
 
                 // Get Full-Res
                 get("/api/photo/{id}/full") {
+                    val incomingToken = call.request.headers["X-Session-Token"] ?: call.request.queryParameters["token"]
+                    if (incomingToken != _room.value?.sessionToken) {
+                        call.respond(HttpStatusCode.Unauthorized, "Invalid or missing session token")
+                        return@get
+                    }
                     val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
                     val original = File(originalsDir, "$id.jpg")
                     if (original.exists()) {
@@ -294,6 +326,11 @@ class FrameRoomServer(
 
                 // Toggle Reaction
                 post("/api/photo/{id}/react") {
+                    val incomingToken = call.request.headers["X-Session-Token"]
+                    if (incomingToken != _room.value?.sessionToken) {
+                        call.respond(HttpStatusCode.Unauthorized, "Invalid or missing session token")
+                        return@post
+                    }
                     val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
                     val req = call.receive<ReactionRequest>()
                     val userSet = reactionsMap.computeIfAbsent(id) { Collections.synchronizedSet(mutableSetOf()) }
@@ -322,6 +359,11 @@ class FrameRoomServer(
 
                 // Host Close Room
                 post("/api/room/close") {
+                    val incomingToken = call.request.headers["X-Session-Token"]
+                    if (incomingToken != _room.value?.sessionToken) {
+                        call.respond(HttpStatusCode.Unauthorized, "Invalid or missing session token")
+                        return@post
+                    }
                     val hostId = call.request.headers["X-Host-Device-Id"]
                     val currentRoom = _room.value
                     if (currentRoom == null || currentRoom.hostDeviceId != hostId) {
@@ -337,11 +379,17 @@ class FrameRoomServer(
 
                 // Embedded Spectator Web Page (Stretch Goal - Live Projector Wall)
                 get("/") {
-                    call.respondText(generateSpectatorHtml(), ContentType.Text.Html)
+                    val token = _room.value?.sessionToken ?: ""
+                    call.respondText(generateSpectatorHtml(token), ContentType.Text.Html)
                 }
 
                 // Live WebSocket
                 webSocket("/ws") {
+                    val incomingToken = call.request.headers["X-Session-Token"] ?: call.request.queryParameters["token"]
+                    if (incomingToken != _room.value?.sessionToken) {
+                        close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Unauthorized session token"))
+                        return@webSocket
+                    }
                     activeSessions.add(this)
                     try {
                         for (frame in incoming) {
@@ -406,7 +454,7 @@ class FrameRoomServer(
             ?: emptyList()
     }
 
-    private fun generateSpectatorHtml(): String {
+    private fun generateSpectatorHtml(token: String = ""): String {
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -502,14 +550,18 @@ class FrameRoomServer(
                 <div class="grid" id="photoGrid"></div>
 
                 <script>
+                    const sessionToken = '$token';
                     const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-                    const wsUrl = wsProtocol + '//' + location.host + '/ws';
+                    const wsUrl = wsProtocol + '//' + location.host + '/ws?token=' + sessionToken;
                     let socket = new WebSocket(wsUrl);
 
                     function loadInitialPhotos() {
                         fetch('/api/join', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Session-Token': sessionToken
+                            },
                             body: JSON.stringify({
                                 deviceId: 'spectator_' + Math.random().toString(36).substring(7),
                                 displayName: 'Web Spectator',
@@ -531,7 +583,7 @@ class FrameRoomServer(
                         card.className = 'card';
                         card.id = 'photo-' + photo.photoId;
                         card.innerHTML = `
-                            <img src="/api/photo/${'$'}{photo.photoId}/thumbnail" alt="Event photo" />
+                            <img src="/api/photo/${'$'}{photo.photoId}/thumbnail?token=${'$'}{sessionToken}" alt="Event photo" />
                             <div class="overlay">
                                 <span class="uploader">${'$'}{photo.uploaderName}</span>
                                 <span class="reactions" id="react-${'$'}{photo.photoId}">★ ${'$'}{photo.reactionCount}</span>

@@ -38,7 +38,7 @@ class PhotoIdentityAndDeduplicationTest {
             tempDir = dir
             testPort = ServerSocket(0).use { it.localPort }
             val s = FrameRoomServer(baseDir = dir)
-            s.start(
+            val createdRoom = s.start(
                 roomName = "Test Event Room",
                 hostDeviceId = testHostDeviceId,
                 hostDisplayName = "Host User",
@@ -46,7 +46,9 @@ class PhotoIdentityAndDeduplicationTest {
                 port = testPort
             )
             server = s
-            client = FrameRoomClient()
+            client = FrameRoomClient().apply {
+                sessionToken = createdRoom.sessionToken
+            }
         }
         return Pair(server!!, client!!)
     }
@@ -295,5 +297,142 @@ class PhotoIdentityAndDeduplicationTest {
         assertTrue(uploadResult.isSuccess)
         val ack = uploadResult.getOrThrow()
         assertEquals(SyncAckStatus.REJECTED_INVALID_PAYLOAD, ack.status)
+    }
+
+    // 12. Request without or with invalid session token is rejected with Unauthorized.
+    @Test
+    fun testUnauthorizedRequestRejectedWithoutSessionToken() = runBlocking {
+        val (srv, _) = ensureServerStarted()
+        val rogueClient = FrameRoomClient() // no session token
+
+        val joinResult = rogueClient.joinRoom(
+            hostIp = "127.0.0.1",
+            port = testPort,
+            deviceId = "rogue-dev",
+            displayName = "Rogue User",
+            clientPublicKey = "rogue_key"
+        )
+        assertTrue("Join without session token must fail", joinResult.isFailure)
+
+        val invalidTokenClient = FrameRoomClient().apply {
+            sessionToken = "invalid_token_9999"
+        }
+        val invalidJoinResult = invalidTokenClient.joinRoom(
+            hostIp = "127.0.0.1",
+            port = testPort,
+            deviceId = "rogue-dev-2",
+            displayName = "Rogue User 2",
+            clientPublicKey = "rogue_key_2"
+        )
+        assertTrue("Join with invalid session token must fail", invalidJoinResult.isFailure)
+
+        rogueClient.close()
+        invalidTokenClient.close()
+    }
+
+    // 13. Request with valid session token succeeds.
+    @Test
+    fun testAuthorizedRequestAcceptedWithSessionToken() = runBlocking {
+        val (srv, _) = ensureServerStarted()
+        val validClient = FrameRoomClient().apply {
+            sessionToken = srv.room.value?.sessionToken
+        }
+
+        val joinResult = validClient.joinRoom(
+            hostIp = "127.0.0.1",
+            port = testPort,
+            deviceId = "guest-authorized",
+            displayName = "Auth Guest",
+            clientPublicKey = "auth_key"
+        )
+        assertTrue("Join with valid session token must succeed", joinResult.isSuccess)
+        assertEquals(srv.room.value?.roomId, joinResult.getOrThrow().room.roomId)
+
+        validClient.close()
+    }
+
+    // 14. GET /api/photo/{id}/thumbnail is rejected without token and succeeds with token.
+    @Test
+    fun testThumbnailGetRejectedWithoutSessionTokenAndAcceptedWithToken() = runBlocking {
+        val (srv, cl) = ensureServerStarted()
+        val photoId = PhotoIdentity.generatePhotoId("FR-TEST", "guest-thumb-auth", 901L, 1710000000000L)
+        val uploadResult = cl.uploadThumbnail(
+            hostIp = "127.0.0.1",
+            port = testPort,
+            photoId = photoId,
+            thumbnailBytes = createValidSampleJpeg(),
+            uploaderDeviceId = "guest-thumb-auth",
+            uploaderName = "Guest Thumb",
+            capturedAt = 1710000000000L
+        )
+        assertTrue(uploadResult.isSuccess)
+
+        // 1. Request without token must return 401 Unauthorized
+        val connNoToken = (java.net.URL("http://127.0.0.1:$testPort/api/photo/$photoId/thumbnail").openConnection() as java.net.HttpURLConnection).apply {
+            requestMethod = "GET"
+        }
+        assertEquals(401, connNoToken.responseCode)
+
+        // 2. Request with query param ?token=... must return 200 OK
+        val connWithQuery = (java.net.URL("http://127.0.0.1:$testPort/api/photo/$photoId/thumbnail?token=${srv.room.value?.sessionToken}").openConnection() as java.net.HttpURLConnection).apply {
+            requestMethod = "GET"
+        }
+        assertEquals(200, connWithQuery.responseCode)
+
+        // 3. Request with header X-Session-Token must return 200 OK
+        val connWithHeader = (java.net.URL("http://127.0.0.1:$testPort/api/photo/$photoId/thumbnail").openConnection() as java.net.HttpURLConnection).apply {
+            requestMethod = "GET"
+            setRequestProperty("X-Session-Token", srv.room.value?.sessionToken)
+        }
+        assertEquals(200, connWithHeader.responseCode)
+    }
+
+    // 15. WebSocket handshake is rejected without valid session token and accepted with valid token.
+    @Test
+    fun testWebSocketRejectedWithoutSessionTokenAndAcceptedWithToken() = runBlocking {
+        val (srv, cl) = ensureServerStarted()
+        val photoId = PhotoIdentity.generatePhotoId("FR-TEST", "guest-ws-auth", 902L, 1710000000000L)
+        cl.uploadThumbnail(
+            hostIp = "127.0.0.1",
+            port = testPort,
+            photoId = photoId,
+            thumbnailBytes = createValidSampleJpeg(),
+            uploaderDeviceId = "guest-ws-auth",
+            uploaderName = "Guest WS",
+            capturedAt = 1710000000000L
+        )
+
+        // 1. Rogue WebSocket with wrong token must be closed by server
+        val rogueClient = FrameRoomClient()
+        val disconnectedLatch = CountDownLatch(1)
+        rogueClient.startWebSocket(
+            hostIp = "127.0.0.1",
+            port = testPort,
+            scope = CoroutineScope(Dispatchers.IO),
+            sessionToken = "invalid_ws_token",
+            onEvent = {},
+            onDisconnected = { disconnectedLatch.countDown() }
+        )
+        assertTrue("Rogue WebSocket must be disconnected by server", disconnectedLatch.await(3, TimeUnit.SECONDS))
+        rogueClient.close()
+
+        // 2. Authenticated WebSocket with valid token receives broadcasts
+        val validClient = FrameRoomClient().apply {
+            sessionToken = srv.room.value?.sessionToken
+        }
+        val eventReceivedLatch = CountDownLatch(1)
+        validClient.startWebSocket(
+            hostIp = "127.0.0.1",
+            port = testPort,
+            scope = CoroutineScope(Dispatchers.IO),
+            sessionToken = srv.room.value?.sessionToken,
+            onEvent = { eventReceivedLatch.countDown() },
+            onDisconnected = {}
+        )
+
+        // Trigger reaction event to verify broadcast receipt
+        cl.toggleReaction("127.0.0.1", testPort, photoId, "reactor-1")
+        assertTrue("Authenticated WebSocket must receive live broadcast event", eventReceivedLatch.await(3, TimeUnit.SECONDS))
+        validClient.close()
     }
 }

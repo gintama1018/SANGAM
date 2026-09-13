@@ -122,6 +122,7 @@ fun LiveGalleryScreen(
     val participants by viewModel.participants.collectAsState()
     val likedPhotoIds by viewModel.likedPhotoIds.collectAsState()
     val pendingPhotos by viewModel.pendingPhotos.collectAsState()
+    val sessionToken by viewModel.sessionToken.collectAsState()
 
     var selectedFilter by remember { mutableStateOf(LiveGalleryFilter.ALL) }
     var heroLiked by remember { mutableStateOf(false) }
@@ -800,7 +801,8 @@ fun LiveGalleryScreen(
                                         port = viewModel.hostPort,
                                         isLiked = likedPhotoIds.contains(photo.photoId),
                                         onPhotoClick = { viewModel.selectPhotoForDetail(photo) },
-                                        onReactionClick = { viewModel.toggleReaction(photo.photoId) }
+                                        onReactionClick = { viewModel.toggleReaction(photo.photoId) },
+                                        sessionToken = sessionToken ?: room?.sessionToken
                                     )
                                 }
                             }

@@ -99,6 +99,8 @@ fun PhotoDetailScreen(
     val photo by viewModel.selectedPhoto.collectAsState()
     val hostIp by viewModel.hostIp.collectAsState()
     val likedPhotoIds by viewModel.likedPhotoIds.collectAsState()
+    val sessionToken by viewModel.sessionToken.collectAsState()
+    val room by viewModel.room.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -109,8 +111,10 @@ fun PhotoDetailScreen(
 
     val currentPhoto = photo
     val isLiked = currentPhoto != null && likedPhotoIds.contains(currentPhoto.photoId)
+    val token = sessionToken ?: room?.sessionToken
+    val tokenQuery = if (!token.isNullOrEmpty()) "?token=$token" else ""
     val fullResUrl = if (currentPhoto != null) {
-        "http://$hostIp:${viewModel.hostPort}/api/photo/${currentPhoto.photoId}/full"
+        "http://$hostIp:${viewModel.hostPort}/api/photo/${currentPhoto.photoId}/full$tokenQuery"
     } else {
         "https://lh3.googleusercontent.com/aida-public/AB6AXuAvwoIMiu108weIxe3CYdc2ZMsD48AvesLZknqCOCpAigZ1jTu86uVelRc0pagAz5iFgpUbskjWU50EAhkc3uu5N7bdRvqD-kVFAqy-lmW1nu8bvEaMiUUjH3q_s_K81MGUMixPSshR8a8HSMWPxkT7u7WRqGGNs9VyQAOmQVvKqX_xstsS4TEg8p_h4RvRG7YGiVvuRgbDP1In_vZsn2x23eTH-UxiCYKAyt1ds_fez2uBWdPMG7r2"
     }

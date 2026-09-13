@@ -16,7 +16,8 @@ data class Room(
     val activeWindowStart: Long,
     val closedAt: Long? = null,
     val hostDeviceId: String,
-    val hostPublicKey: String
+    val hostPublicKey: String,
+    val sessionToken: String = ""
 )
 
 @Serializable
@@ -103,10 +104,11 @@ data class QRPayload(
     val hostIp: String,
     val port: Int,
     val roomId: String,
-    val hostPublicKey: String
+    val hostPublicKey: String,
+    val sessionToken: String
 ) {
     fun toUrl(): String {
-        return "fr://$hostIp:$port/$roomId/$hostPublicKey"
+        return "fr://$hostIp:$port/$roomId/$hostPublicKey/$sessionToken"
     }
 
     companion object {
@@ -117,10 +119,14 @@ data class QRPayload(
                 val host = uri.host ?: return null
                 val port = if (uri.port > 0) uri.port else 8080
                 val pathSegments = uri.path.trim('/').split('/')
-                if (pathSegments.size < 2) return null
+                if (pathSegments.size != 3) return null
                 val roomId = pathSegments[0]
                 val publicKey = pathSegments[1]
-                QRPayload(host, port, roomId, publicKey)
+                val sessionToken = pathSegments[2]
+                if (roomId.isBlank() || publicKey.isBlank() || sessionToken.isBlank()) {
+                    return null
+                }
+                QRPayload(host, port, roomId, publicKey, sessionToken)
             } catch (e: Exception) {
                 null
             }

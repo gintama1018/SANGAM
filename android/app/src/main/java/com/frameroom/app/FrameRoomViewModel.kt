@@ -62,6 +62,7 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
     ).apply {
         uploadExecutor = { record, thumbBytes ->
             val targetIp = _hostIp.value ?: throw java.net.ConnectException("Host IP is not set")
+            val token = _sessionToken.value ?: _room.value?.sessionToken
             val result = client.uploadThumbnail(
                 hostIp = targetIp,
                 port = hostPort,
@@ -74,7 +75,8 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
                 cameraModel = record.cameraModel,
                 exposure = record.exposureTime,
                 iso = record.iso,
-                focalLength = record.focalLength
+                focalLength = record.focalLength,
+                sessionToken = token
             )
             result.getOrThrow()
         }
@@ -89,6 +91,9 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _room = MutableStateFlow<Room?>(null)
     val room = _room.asStateFlow()
+
+    private val _sessionToken = MutableStateFlow<String?>(null)
+    val sessionToken = _sessionToken.asStateFlow()
 
     private val _isHost = MutableStateFlow(false)
     val isHost = _isHost.asStateFlow()
@@ -158,11 +163,13 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
                     port = hostPort
                 )
                 _room.value = createdRoom
+                _sessionToken.value = createdRoom.sessionToken
+                client.sessionToken = createdRoom.sessionToken
                 _participants.value = server.participants.value
                 _photos.value = emptyList()
 
-                // Generate scannable QR containing fr://{ip}:{port}/{roomId}/{publicKey}
-                val qrPayload = QRPayload(ip, hostPort, createdRoom.roomId, myKeyPair.publicKeyBase64)
+                // Generate scannable QR containing fr://{ip}:{port}/{roomId}/{publicKey}/{sessionToken}
+                val qrPayload = QRPayload(ip, hostPort, createdRoom.roomId, myKeyPair.publicKeyBase64, createdRoom.sessionToken)
                 val qrBmp = QRGenerator.generateQRCodeBitmap(qrPayload.toUrl())
                 _qrBitmap.value = qrBmp
 
@@ -205,6 +212,8 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
             try {
                 _hostIp.value = payload.hostIp
                 _isHost.value = false
+                _sessionToken.value = payload.sessionToken
+                client.sessionToken = payload.sessionToken
                 syncQueueManager.setHostEndpoint(payload.hostIp, payload.port)
 
                 myKeyPair = CryptoManager.generateKeyPair()
@@ -213,7 +222,8 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
                     port = payload.port,
                     deviceId = deviceId,
                     displayName = userDisplayName,
-                    clientPublicKey = myKeyPair.publicKeyBase64
+                    clientPublicKey = myKeyPair.publicKeyBase64,
+                    sessionToken = payload.sessionToken
                 )
 
                 if (joinResult.isSuccess) {
@@ -227,6 +237,7 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
                         hostIp = payload.hostIp,
                         port = payload.port,
                         scope = viewModelScope,
+                        sessionToken = payload.sessionToken,
                         onEvent = { event -> handleWebSocketEvent(event) }
                     )
 
@@ -365,8 +376,9 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun toggleReaction(photoId: String) {
         val targetIp = _hostIp.value ?: return
+        val token = _sessionToken.value ?: _room.value?.sessionToken
         viewModelScope.launch(Dispatchers.IO) {
-            val result = client.toggleReaction(targetIp, hostPort, photoId, deviceId)
+            val result = client.toggleReaction(targetIp, hostPort, photoId, deviceId, sessionToken = token)
             if (result.isSuccess) {
                 val resp = result.getOrThrow()
                 _likedPhotoIds.value = if (resp.isReacted) {
@@ -387,8 +399,9 @@ class FrameRoomViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun closeRoom() {
         val targetIp = _hostIp.value ?: return
+        val token = _sessionToken.value ?: _room.value?.sessionToken
         viewModelScope.launch(Dispatchers.IO) {
-            client.closeRoom(targetIp, hostPort, deviceId)
+            client.closeRoom(targetIp, hostPort, deviceId, sessionToken = token)
             HostServerService.stop(getApplication())
             galleryObserver?.stopWatching()
             syncQueueManager.setHostEndpoint(null, hostPort)
