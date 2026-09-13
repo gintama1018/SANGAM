@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matched directly with com.frameroom.app.ui.theme.Color.kt tokens -->
+    <color name="surface_onyx">#111318</color>
+    <color name="surface_container_lowest">#0C0E12</color>
+    <color name="surface_container_low">#1A1C20</color>
+    <color name="amber_primary">#FFC174</color>
+    <color name="amber_container">#F59E0B</color>
+    <color name="amber_fixed">#FFDDB8</color>
+    <color name="amber_fixed_dim">#FFB95F</color>
+    <color name="on_surface">#E2E2E8</color>
+</resources>

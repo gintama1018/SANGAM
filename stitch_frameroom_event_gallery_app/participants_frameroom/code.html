@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#111318;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary-fixed":"#e1e0ff","on-error-container":"#ffdad6","surface":"#111318","on-primary-fixed":"#2a1700","tertiary-fixed-dim":"#7fd0ff","secondary-fixed-dim":"#c0c1ff","on-error":"#690005","error":"#ffb4ab","primary-fixed-dim":"#ffb95f","tertiary-fixed":"#c5e7ff","inverse-primary":"#855300","primary-fixed":"#ffddb8","tertiary":"#8fd5ff","inverse-surface":"#e2e2e8","outline-variant":"#534434","surface-container-low":"#1a1c20","background":"#111318","surface-container-lowest":"#0c0e12","on-tertiary-container":"#004966","on-secondary-fixed-variant":"#2f2ebe","on-secondary":"#1000a9","inverse-on-surface":"#2f3035","surface-container":"#1e2024","on-surface":"#e2e2e8","on-secondary-container":"#b0b2ff","secondary-container":"#3131c0","surface-tint":"#ffb95f","on-primary":"#472a00","on-background":"#e2e2e8","surface-container-highest":"#333539","secondary":"#c0c1ff","surface-bright":"#37393e","surface-dim":"#111318","on-secondary-fixed":"#07006c","outline":"#a08e7a","on-tertiary-fixed-variant":"#004c6a","on-primary-container":"#613b00","surface-variant":"#333539","on-tertiary-fixed":"#001e2d","error-container":"#93000a","tertiary-container":"#1abdff","on-surface-variant":"#d8c3ad","primary":"#ffc174","surface-container-high":"#282a2e","on-primary-fixed-variant":"#653e00","primary-container":"#f59e0b","on-tertiary":"#00344a"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-tablet":"1.5rem","gutter-tablet":"1rem","margin-desktop":"2.5rem","space-xl":"2rem","margin":"1rem","gutter":"0.75rem","gutter-desktop":"1.5rem","space-xs":"0.25rem","space-md":"1rem","space-sm":"0.5rem","space-lg":"1.5rem"},"fontFamily":{"metadata-mono":["Inter"],"body-lg":["Inter"],"headline-md":["Inter"],"label-sm":["Inter"],"display-lg":["Inter"],"display-lg-mobile":["Inter"],"headline-sm":["Inter"],"headline-lg":["Inter"],"body-md":["Inter"],"label-md":["Inter"]},"fontSize":{"metadata-mono":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"500"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"500"}],"display-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.03em","fontWeight":"800"}],"display-lg-mobile":["32px",{"lineHeight":"38px","letterSpacing":"-0.025em","fontWeight":"800"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-lg":["28px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0em","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/75 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><img alt="FrameRoom Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XG89P2VIi-1hRWGeLbtvQ8wlRROip-yj-MXX4sPa1ljzp5wwY1cPax_CH2nEhTejyl2isDlMdi7Vcx1dpc7nv71x3OSQwW3g2ihanzns1pJQYNPtGqs0Nh_xv_I8vc35Nx6dMabYlz3Uw-_cAceS4o0G49lnRmnjc1Yh5ik_KjLnhcWdbCfqn7F87_koGB_RX9nmIVM8ja9gj81QSN_c6pNm7ZccI2PnzMsHgk-XMnh3xbSi1S5zvQWA"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">FrameRoom</span><span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Profile</span></div></div><div class="inline-flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-surface-container-high/80 backdrop-blur-md shadow-[0_0_12px_rgba(245,158,11,0.15)]"><span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-primary tracking-wide uppercase font-semibold">Live Room</span></div><div class="flex items-center justify-center"><a class="relative p-0.5 rounded-full ring-2 ring-primary/30 transition-transform active:scale-95" data-path="profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzG9t3xE2Z3ZVVPLJv6Kyxu9473ZqriiUndFQf_pt3qeHop3K7J8tNI9goArPaH_ybrmYcJ-SvoRcxsqbIzf61VvhFXvd9jaDC5u_xGIzkz2fQoee1AtYusx5BoNc-5cxDsFkTSnbrGSsFSHkjNSZhdGAEedP_EVtdNjAv5LMfTWrimZLR3DLB2Uk_k-MygFut7VicPi93uEDXum7716lNXFROIoFrLwvanJGn-ut5XS2EC0H_qjXY"/></a></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-28 bg-surface"><div class="flex flex-col w-full">
+<!-- Dynamic Atmospheric Glow Backdrop -->
+<div class="relative px-margin pt-space-md pb-space-lg flex flex-col gap-space-md">
+<!-- Header Typography & Live Metrics -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Room Participants</h2>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-ping"></span>
+<span class="font-metadata-mono text-metadata-mono text-primary font-semibold tracking-wider">SYNCING</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">384 contributors syncing memories to Spring Fest 2025</p>
+</div>
+<!-- Search Input Bar -->
+<div class="relative flex items-center w-full">
+<span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[20px] pointer-events-none">search</span>
+<input class="w-full h-12 pl-11 pr-10 rounded-xl bg-surface-container-low text-on-surface placeholder:text-on-surface-variant/60 font-body-md text-body-md outline-none transition-all duration-200 focus:bg-surface-container focus:shadow-[0_0_0_2px_rgba(245,158,11,0.25)]" id="participant-search" placeholder="Search by attendee name or handle..." type="text"/>
+<button aria-label="Clear search" class="absolute right-3.5 text-on-surface-variant hover:text-on-surface hidden transition-opacity" id="clear-search-btn">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+</button>
+</div>
+<!-- Filter Segmented Chips (Horizontal Scroll) -->
+<div class="flex items-center gap-space-xs overflow-x-auto no-scrollbar py-0.5" id="filter-container">
+<button class="filter-chip active-filter px-3.5 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 bg-primary-container text-on-primary-container shadow-[0_0_16px_rgba(245,158,11,0.25)]" data-filter="all">
+        All (384)
+      </button>
+<button class="filter-chip px-3.5 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 bg-surface-container-high text-on-surface-variant hover:text-on-surface" data-filter="photographers">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">stars</span>
+          Official Photographers (6)
+        </span>
+</button>
+<button class="filter-chip px-3.5 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 bg-surface-container-high text-on-surface-variant hover:text-on-surface" data-filter="active">
+<span class="inline-flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+          Active Now (48)
+        </span>
+</button>
+</div>
+</div>
+<!-- Main Contributors Feed -->
+<div class="px-margin flex flex-col gap-space-lg" id="directory-list">
+<!-- Category 1: Official Event Photographers -->
+<section class="flex flex-col gap-space-md section-block" data-category="photographers">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Official Event Photographers</h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high font-metadata-mono text-metadata-mono text-primary font-medium">6 CREW</span>
+</div>
+<!-- Card 1: Aarav Patel -->
+<article class="participant-card flex flex-col p-4 rounded-xl bg-surface-container-low shadow-md transition-all duration-200 hover:bg-surface-container" data-active="true" data-handle="@aarav_lens" data-name="Aarav Patel" data-type="photographers">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-14 h-14 rounded-full object-cover shadow-sm" data-alt="Editorial close-up portrait of Aarav Patel holding a vintage 35mm camera, warm amber concert stage backlighting, shallow depth of field, warm cinematic aesthetic with deep black tones and glowing specular highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZpStbdGzL8f9G64-oiGd2hZMSL4eXZAaX6IZRVjUPnONp1mLyY4__PoVoAPhUsBZQyVWIb0fq6LH-OBGCTxi2yFkN9tESAqVLhFXJWcdqMlzg5YTrQIS6sthu9LLfjafM3CFyuIIk9DW8dV_5rBVYXwuYYn_9TRybjsBhHrQgqbVjApZY7jNp3THua-3lWE3wXIGHzTUz6hGT4O5xgRcIVjX_0WXEmr5PgO8qHJ-sEakMrEtRKTlu"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-primary-container shadow-sm flex items-center justify-center" title="Live Now">
+<span class="w-1.5 h-1.5 rounded-full bg-surface"></span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Aarav Patel</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-primary-container/20 text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+                  Photographer
+                </span>
+</div>
+<span class="font-metadata-mono text-metadata-mono text-on-surface-variant truncate">@aarav_lens • Official Mainstage</span>
+<span class="font-label-sm text-label-sm text-primary mt-0.5 font-medium">142 photos uploaded</span>
+</div>
+</div>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-[12px] font-label-md hover:text-on-surface hover:bg-surface-container-highest transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">sensors</span>
+            Live
+          </button>
+</div>
+<!-- Mini 3-photo preview strip -->
+<div class="grid grid-cols-3 gap-2 mt-3.5">
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="High-energy concert mainstage with explosive gold confetti falling, laser beams penetrating purple haze, wide crowd cheering, cinematic festival photography with dynamic warm amber illumination." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvb3eehUhE6XFRh_TUp0h5inCTDeuIcGo06KevAhI9a3FossD6MYVA8I49sQegpVH7Jeqr4JtNLntX93PA-PlymzTWoqFpHdpIuXoBFIoCO0etnkCzQvaYsl5IJXiK2x-2Xqu-qSZ56lU6i7Dm3ByGyiVfByQXP3VffvUQ7wRzoVGSpqc0gFVc_S6BY-o-ph0Cp5Tw6q0dZ1wpGMiQ9vEDyM0ATzciKHjh7nHuBFdzsXf01lLdXtkP"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Close-up of rock singer with microphone drenched in amber stadium lighting, beads of sweat glistening, motion blur on guitar neck, intimate concert perspective." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJD113bGZYOM7IwtA81v7rkmGjqZqv64Op0ApeNyg8aMRxVJmPIgJ4WkcbUNq-rWzQV2GhZfvg-8Eg2Ar9FSUxVGTccx8KbuglPmzWwJguMn0YvnhEsHMN8-0U5oLj82R8hA-rOZButNb9K8PbFmDYu7uTFswuCFZfjDhMz8UN7-GuKGrr_xpTI8UxoZ4E6trsD69tEH4C1dL3d-QO1qNHGwwgcpGwrESD1oppuHw4RDxVZpsSB4mW"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high relative">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Sweeping panoramic shot of festival main grounds at golden hour dusk, silhouetted Ferris wheel, amber festoon string lights twinkling over thousands of partygoers." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSY5UVRYhc-_uHigD70ASc_E4CV8uj2XFbg9HlQU6d7VQHPOopN0tdjZTxh2t_a3xSDeEBtL-Z3uqxtRm4YW7hacAVfAhxzaY3kH5n-2M8-ea-XgIOI4VZ8vCpxYgtR891JeD7LbYL-6Qn5GpjtofXdCIxBLs6mhsdvBASCY5WCrTnfXYrwKXbeRl5C0gL_T5C9i-daRW7tbBfoeFtpfWI-143_mR7R7eCC-Ul1cv4KzZx6iGthOe4"/>
+<div class="absolute inset-0 bg-surface/40 backdrop-blur-[2px] flex items-center justify-center">
+<span class="font-metadata-mono text-metadata-mono text-on-surface font-bold">+139</span>
+</div>
+</div>
+</div>
+<!-- Action Pill Button -->
+<div class="mt-3.5 pt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> Synced 2m ago
+          </span>
+<button class="px-3.5 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md font-semibold tracking-tight shadow-sm hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5">
+<span>View 142 Photos</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Card 2: Maya Lin -->
+<article class="participant-card flex flex-col p-4 rounded-xl bg-surface-container-low shadow-md transition-all duration-200 hover:bg-surface-container" data-active="true" data-handle="@maya_shots" data-name="Maya Lin" data-type="photographers">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-14 h-14 rounded-full object-cover shadow-sm" data-alt="Intimate film portrait of Maya Lin wearing vintage headphones and a silver bomber jacket, smiling softly in ambient neon backstage lighting, stylish high-fashion festival photo aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBruTrAWycUVT7ai1uyfomAGvaZlceB7AMNUTC4fqpY3mf8E1eXBu2-AhgZBmbBl6lIHPoWJnCz9Ft8GTd_LqJy3HyuoehLBCxLQ62_0VTS5fUnU6mmyUqpUM7PPA92jUiH90Rzz7BvGwHi9McLBCYJdrPZFseq9Du1h8oiZgtpzHpki23PmpQx1ViX0HGh97RYy3QvVWV18AYo78JkZ4b_1XCrZTfiMLfgPBdUl5AxwFeDDN50HGdI"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-primary-container shadow-sm flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-surface"></span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Maya Lin</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-primary-container/20 text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+                  Photographer
+                </span>
+</div>
+<span class="font-metadata-mono text-metadata-mono text-on-surface-variant truncate">@maya_shots • Crowd & Backstage</span>
+<span class="font-label-sm text-label-sm text-primary mt-0.5 font-medium">98 photos uploaded</span>
+</div>
+</div>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-[12px] font-label-md hover:text-on-surface hover:bg-surface-container-highest transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">sensors</span>
+            Live
+          </button>
+</div>
+<!-- Mini 3-photo preview strip -->
+<div class="grid grid-cols-3 gap-2 mt-3.5">
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Candid backstage snapshot of band members laughing in green room couches under warm vintage incandescent filament bulbs, authentic documentary photojournalism style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnG0FvGZsdDBuLcgqqnsvIE2x_PamaJqjPnHjFvetXCMIVr5fEtYKehhyEgVLubSOq568iHMeTUGYnvUBmVMER7DXlEm5wD_SfvG7ZMm-ARKDWqVhvjQn2IkO7dv4gNjYqJ3t8qdazRcVHoxI8idkgv0E51RZx8-XAAueCDkXzz65XkhDKrt6RvPQ87FDEkAQmIlkt8SB8Ciz7q-7bg5zXP285D8LHkSaIEdjsCXv-XooqJlVrF2ZN"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Ecstatic festival attendees covered in glowing body glitter sharing neon drinks, flash photography aesthetic, raw 90s party vibes." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc8u__Xi-CaU2wbCPV-OlJZ4WAYPJ1xN2rWqqNw2AmxVTDFeyI23PLMDbrC5m4GmRNcAGiV5_LAq9Mzd8yuw1avSuHHXDiq3otcBqwhPLIpxbQxSxntlR-_Feia0N9EL3yD-CXOjiu0hU1ffmZDOh3L5IC98IJwv-2Bmh-LkdS2ThQ8hGD15TkvPbBiKI4umETlbLHuykPfNWs04XTzNfbkEBheA6gPsTHMKLiIW9gQGErYXMHra9E"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high relative">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="VIP festival lounge corner with velvet booths, moody amber wall sconces, artists unwinding after performance, editorial atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqY2oLktchRrOiCfyhrfANB8il9it-af7tXYJKyzg8EO2T1YdtW9nc3bQpzihXHZzHG1Hs6pN1W06THcr8oayYJbwsPrUiILY3gHqJ5yRC3c5gOEH5oWfyTNaBiniBMf6QwXIOc__vCvRwr-cK9KCMfT3sY-bcXYoQxSBZ3gRzPaYbRapq4_3BfiJItGbf5gCw38rHnAdBWvyK6ieYe6VsY5dKKl-amKAPwb804L-d8B_-jop4PwJN"/>
+<div class="absolute inset-0 bg-surface/40 backdrop-blur-[2px] flex items-center justify-center">
+<span class="font-metadata-mono text-metadata-mono text-on-surface font-bold">+95</span>
+</div>
+</div>
+</div>
+<!-- Action Pill Button -->
+<div class="mt-3.5 pt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> Synced 8m ago
+          </span>
+<button class="px-3.5 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md font-semibold tracking-tight shadow-sm hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5">
+<span>View 98 Photos</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</article>
+</section>
+<!-- Category 2: Top Attendee Contributors -->
+<section class="flex flex-col gap-space-md section-block" data-category="attendees">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">group</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Top Attendee Contributors</h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high font-metadata-mono text-metadata-mono text-on-surface-variant font-medium">378 FAN PICS</span>
+</div>
+<!-- Card 3: Rohan Gupta -->
+<article class="participant-card flex flex-col p-4 rounded-xl bg-surface-container-low shadow-md transition-all duration-200 hover:bg-surface-container" data-active="true" data-handle="@rohan_g" data-name="Rohan Gupta" data-type="attendee">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-14 h-14 rounded-full object-cover shadow-sm" data-alt="Profile portrait of Rohan Gupta wearing mirrored sunglasses reflecting golden festival lasers, outdoor dusk natural lighting, friendly smile, crisp sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE1IhVymejnCuT-XzLP_-_1sfNl3R1UBEtAnY2tZDBGvyQk94Uy1fLGB9oAfrsv0y_0O9CzmWRRGLS0BeOD17PEhYCVTaK7fqwGD_7tGLRbEVgNKvP8vov2jTs97-BH410pjKhexxJm21ptisBgp_bxY1TCfSjZTui3O4bmLDJzpgxJpAvFrsKywjQ6id72CG-GeJl8RtMU79sVxYalo3MokXc3i77Ebn5gjZFKtnePxINz7O4eFlf"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-tertiary shadow-sm flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-surface"></span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Rohan Gupta</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-medium">
+                  Attendee
+                </span>
+</div>
+<span class="font-metadata-mono text-metadata-mono text-on-surface-variant truncate">@rohan_g</span>
+<span class="font-label-sm text-label-sm text-secondary mt-0.5 font-medium">54 photos synced</span>
+</div>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[13px]">bolt</span>
+            Top 1%
+          </div>
+</div>
+<!-- Mini 3-photo preview strip -->
+<div class="grid grid-cols-3 gap-2 mt-3.5">
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Festive food truck corner with neon food signs, friends laughing while eating gourmet tacos, bokeh string lights illuminating evening picnic tables." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDO_r0x9lIggP0RS_0pCRko-qSgTKlFoixt9kTbxjEvGs707cKvOAjwUQyKUHO9t7WDxIcLlab2wz66p1WuHA7ZAdQLXaUHjP36TMkqXDQmFYCnLf4OoCM7Xi3IINbgqu5eZr7De1cbOFW4a1Lmd-zALtiuxysMpFl5JOycsQTpXSVQvbkBxqchRXe5mB32zZZ-lFDjrvKaDb8V8ZLPZ4NcIeuN_oe_CpCpGlWQSilKK4gjM2hf7eEM"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Selfie group of friends wearing flower crowns and glitter smiles with sun setting behind mountain stage in background, warm solar flares." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEnfeeG05S6zuJ3di7qpox3Mm7Ns8zM07S_NFBUy3vA8JDumQT7vsMoCze_Kqiwy-fOunJdUnGw6mMwa90TVbzM4aC5Xzl4AT3Si9pP_edcHD1c2qQm-NIzeigSWuHocwJkON-3vHzYpptNGvE2v5V4ziNFGTRLUpzpPEQncPwwsF1BmNgr8jxoIlQqq6RpkeTIHogvOzcZ9U8HKTEpVYczDajQwgRJ3iF-oLA2W9hdST3vwDFQb2P"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high relative">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Dancing crowd silhouette against deep purple and neon pink LED stage projections, arms raised in rhythm." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCY6QTSp0Pv_WPPes9B5P0QEB_IpvN8r45Io2qnkCSJjIIB5Hpg9JhBE_NR2emCPVqgos4BakfOAvmh-iIrC2ZpjjEsROvOTwdi_e0bbOcqD8j8s_OOKMrlLcZT_Gwg0ypi6YcS7wtg0qtu81yU-m-PHv0sGdCN1INjszxUi4CzFQ0NHwBkY-8E_bgFnUqkadW4SEw1guRG_l003FysUTN9Ood1LzmNN7MjkfRxzS4FAbA0nHOtQusN"/>
+<div class="absolute inset-0 bg-surface/40 backdrop-blur-[2px] flex items-center justify-center">
+<span class="font-metadata-mono text-metadata-mono text-on-surface font-bold">+51</span>
+</div>
+</div>
+</div>
+<!-- Action Pill Button -->
+<div class="mt-3.5 pt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> Synced 14m ago
+          </span>
+<button class="px-3.5 py-2 rounded-full bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold tracking-tight hover:bg-surface-container-highest active:scale-95 transition-all flex items-center gap-1.5">
+<span>View 54 Photos</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Card 4: Diya Sharma -->
+<article class="participant-card flex flex-col p-4 rounded-xl bg-surface-container-low shadow-md transition-all duration-200 hover:bg-surface-container" data-active="true" data-handle="@diya_vibe" data-name="Diya Sharma" data-type="attendee">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-14 h-14 rounded-full object-cover shadow-sm" data-alt="Atmospheric studio portrait of Diya Sharma smiling radiantly with boho chic braids, warm festival afternoon sunlight, cinematic photography aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYUhcxofImBgobHzX8fEhs0eDqgK3SoJ6WNk8PEAJEssxt5lZQLmwvMyDyqWSnUQ_d2ETWqoxFW6Qwd_9LUv6OYXYK-qOG7DYzMwo-vjzmnjjLQlhXDre--_pCMYXutBTh0MwTF09oCiFz8qHD8HtxdMI2g6PGi0gVN4aponEGGAdG9WVWtRGitJUpbotirlelTeIHuQyHaDcNtFyPxZtaooZEpqoCnC2rglW7jc0ULoJ0mXUWQEcu"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-tertiary shadow-sm flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-surface"></span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Diya Sharma</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-medium">
+                  Attendee
+                </span>
+</div>
+<span class="font-metadata-mono text-metadata-mono text-on-surface-variant truncate">@diya_vibe</span>
+<span class="font-label-sm text-label-sm text-secondary mt-0.5 font-medium">38 photos synced</span>
+</div>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[13px]">bolt</span>
+            Top 3%
+          </div>
+</div>
+<!-- Mini 3-photo preview strip -->
+<div class="grid grid-cols-3 gap-2 mt-3.5">
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Art installation featuring giant illuminated kinetic petals glowing in warm orange and violet in night festival grove, people interacting excitedly." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1PPTH9RgxS9NOpOtaaLXBkvLjtL6XgXIRdSirKaMvKN7UXcWXvZvJfDFY2unzEEcs7vVIow0soKF-aWXQZC4Mng-xSCCEP-gOZ7GaeyXobFg63gleY5tzWxOCqplUg5c57bDgsGet95fCAYZgxQC_Cc1_7Q_KWOixXsu0jpQ514qz8snQhJh-v_v2V2OocfSAYBzQU6RwCi9nAX7fHlBWcz6-e1S-P42VwSn9DOU-9pIXdj-0fvPX"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Overhead aesthetic top-down shot of friends clinking craft sodas and festival cocktails, rustic wooden table scattered with polaroids and wristbands." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7Qsa2B2Iow3f0Sk3BQ2xyo9ac5Vty3EhKIKZXfHKTn3H_pLQRHkj9oHqyaS6ideDcGpNbI4Ovl7MDXEpJ3g2x7rxV6W2xntnK7CNq58RaEA8jUmh-sagIjNJNxcYJMr8PZON3PAXEJbQi5EHKq1I1WuDXsE3ufPyyjzMnDWcTyMHkP9bqrCJhj-_hAr3XC2InCUzsiLEBixwdmaieAlII78BGIYSodJNYhGu-EkNSOv-sOJoN-lrF"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high relative">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Night festival pyrotechnics bursting high over the crowd, embers raining safely, brilliant amber sparks glowing against midnight black sky." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9SakZ8uYqNEbgExF0fU5daIAR82JOxh2oVic-RLKxwqDNJdloV8tKeaSV13J1UgOuUfgAM_hjd23iZdaFL2sZEpLGesBEySZmQ3RtNyCpfhMOzvDmSqWjjx0JG7s5X-FErlHR81f5870fpHzDnbnD2m4ItVi7V5Bn6wYFRPxbArirzHy6HE-a5V_CoN94lgm_efuVF89fGgbQ5sprNX7tPY5V-rvH8Wex-qU7yYBmIx_AfEJ2jPJp"/>
+<div class="absolute inset-0 bg-surface/40 backdrop-blur-[2px] flex items-center justify-center">
+<span class="font-metadata-mono text-metadata-mono text-on-surface font-bold">+35</span>
+</div>
+</div>
+</div>
+<!-- Action Pill Button -->
+<div class="mt-3.5 pt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> Synced 22m ago
+          </span>
+<button class="px-3.5 py-2 rounded-full bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold tracking-tight hover:bg-surface-container-highest active:scale-95 transition-all flex items-center gap-1.5">
+<span>View 38 Photos</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Card 5: Devon Park -->
+<article class="participant-card flex flex-col p-4 rounded-xl bg-surface-container-low shadow-md transition-all duration-200 hover:bg-surface-container" data-active="false" data-handle="@devon_p" data-name="Devon Park" data-type="attendee">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-14 h-14 rounded-full object-cover shadow-sm" data-alt="Editorial candid side-profile portrait of Devon Park wearing an oversized denim jacket and beanie, warm festival lighting reflecting in pupils." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6xlRiG0iQiHqr8Oppbl9ZXVk2Xgkmn5u8HVzk5tQ9qJRZzsnHm2km9xMC4UOOmjzd6LH3pmS7b-Rh5B4Gkrtz_RZ01FK2D7aYlnejWgbeSZITmEvAorFVm2by004mJBS0eZJvLhAALIDY-p8kT_63OqopxqemvFX7NVUPCcKZ5ZHKWzsK1iGG5L7BrsQnwJv0x-qQiW02FcL6sKc_f-xSbPuK6vLTECVBRTP81E-iY6bszOBD5Jxn"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-surface-container-highest shadow-sm flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40"></span>
+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Devon Park</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-medium">
+                  Attendee
+                </span>
+</div>
+<span class="font-metadata-mono text-metadata-mono text-on-surface-variant truncate">@devon_p</span>
+<span class="font-label-sm text-label-sm text-secondary mt-0.5 font-medium">26 photos synced</span>
+</div>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[13px]">check_circle</span>
+            Synced
+          </div>
+</div>
+<!-- Mini 3-photo preview strip -->
+<div class="grid grid-cols-3 gap-2 mt-3.5">
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Acoustic tent stage intimate performance with singer on stool bathed in soft golden rim lighting, audience seated cross-legged on grass." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8ZLGLNiz7IX1DASD4iJSgzjmrzQLrORFBS1Lcid50qZ6klqZTVJxcj8Qz7cGl7wGawq6T50C_gx3sSYlCtMR6djc9CPylAzOajejMjtpdeDiXCX7nxJO-F79lInT8vn8dSU9-tf_sJZbMDNAxxF_I2FnZtw1WtsXqiJkIe6heyZ-yy2uYc5YJsSqUlsBeWWQaxSPAv2LfS6gW8JvB0kYDelgmPzKxrle4Ff72QQkTERxQtiCSCN2S"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Festival merchandise tent display of limited edition screenprinted concert posters with bold retro typography and colorful badges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAROCU1Aa5oYmY5TRGC3cPcNX4XEFXtdE06Dtf6wdVH_JQBw9Ws4CimV7c06fSpUNzNjK-DNXyYOsR_WYKZaySE8VsQz4sO6r5_iCzZUqYBALReQiGFl6Q7bEiNXyW0qunyUyP_WEtJ2lYfcBLJMwiGIqF6NDjLsXL5U231wTiOe2NFC-fxSPwiR5HVU5TxJUGbnF0Drl-JmGvu_A_HE6I5S9439oGvmsSsYox2rwHNUsvcL-Un0gVb"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-high relative">
+<img class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" data-alt="Sunset festival panorama with golden orange rays piercing through tree branches, silhouette of crowds enjoying the music." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKGBOzYym5hNHdsgweyKWCaRavK7dHM2SGmRoO493N0EsCtjHjQYgQjlmZ-2swL7sLgI0_duWtxbPIcoGoQbKCIKFKjLVNL_DtOLGr3_g5eA9lSXr584B-8pVXuFBTJ6TfDzENqabCywlrJRRq1Lz13ftVy7nnCUelwuDR-aIn_1lZp9Pu8hCDkrUQCA_5lkRdy8k5yosOj84kMWx3NJBH7AF1wu9D1ry3vtGj6TrvgWIP9Na3Ey9t"/>
+<div class="absolute inset-0 bg-surface/40 backdrop-blur-[2px] flex items-center justify-center">
+<span class="font-metadata-mono text-metadata-mono text-on-surface font-bold">+23</span>
+</div>
+</div>
+</div>
+<!-- Action Pill Button -->
+<div class="mt-3.5 pt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> Synced 1h ago
+          </span>
+<button class="px-3.5 py-2 rounded-full bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold tracking-tight hover:bg-surface-container-highest active:scale-95 transition-all flex items-center gap-1.5">
+<span>View 26 Photos</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</article>
+</section>
+<!-- Empty State for Search Feedback (Hidden by default) -->
+<div class="hidden flex-col items-center justify-center text-center p-8 rounded-2xl bg-surface-container-low my-4" id="no-results-state">
+<div class="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-3">
+<span class="material-symbols-outlined text-[28px]">person_search</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">No contributors found</h4>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xs">Try searching for another name, handle, or toggle off filters.</p>
+</div>
+<!-- Quick Stats Bento Strip -->
+<div class="p-4 rounded-xl bg-surface-container-low flex items-center justify-between mt-2 mb-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">cloud_sync</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Live Room Synchronization</span>
+<span class="font-metadata-mono text-metadata-mono text-on-surface-variant">P2P Auto-syncing raw captures</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-primary-container text-on-primary-container font-semibold">
+        99.4%
+      </span>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const searchInput = document.getElementById('participant-search');
+    const clearBtn = document.getElementById('clear-search-btn');
+    const filterButtons = document.querySelectorAll('.filter-chip');
+    const cards = document.querySelectorAll('.participant-card');
+    const sections = document.querySelectorAll('.section-block');
+    const noResults = document.getElementById('no-results-state');
+
+    let currentFilter = 'all';
+
+    function updateVisibility() {
+      const query = (searchInput.value || '').trim().toLowerCase();
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const name = (card.getAttribute('data-name') || '').toLowerCase();
+        const handle = (card.getAttribute('data-handle') || '').toLowerCase();
+        const type = card.getAttribute('data-type');
+        const isActive = card.getAttribute('data-active') === 'true';
+
+        const matchesSearch = !query || name.includes(query) || handle.includes(query);
+        let matchesFilter = true;
+
+        if (currentFilter === 'photographers') {
+          matchesFilter = (type === 'photographers');
+        } else if (currentFilter === 'active') {
+          matchesFilter = isActive;
+        }
+
+        if (matchesSearch && matchesFilter) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // Update Section headers visibility
+      sections.forEach(sec => {
+        const visibleChildCards = sec.querySelectorAll('.participant-card:not([style*="display: none"])');
+        sec.style.display = visibleChildCards.length > 0 ? 'flex' : 'none';
+      });
+
+      // Toggle Empty State
+      if (visibleCount === 0) {
+        noResults.classList.remove('hidden');
+        noResults.classList.add('flex');
+      } else {
+        noResults.classList.add('hidden');
+        noResults.classList.remove('flex');
+      }
+
+      // Toggle Clear Icon
+      if (query.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+    }
+
+    // Search events
+    searchInput.addEventListener('input', updateVisibility);
+
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchInput.focus();
+      updateVisibility();
+    });
+
+    // Filter Chips toggle
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => {
+          b.classList.remove('bg-primary-container', 'text-on-primary-container', 'shadow-[0_0_16px_rgba(245,158,11,0.25)]');
+          b.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+        });
+
+        btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+        btn.classList.add('bg-primary-container', 'text-on-primary-container', 'shadow-[0_0_16px_rgba(245,158,11,0.25)]');
+
+        currentFilter = btn.getAttribute('data-filter');
+        updateVisibility();
+      });
+    });
+
+    // Tap feedback on View Photos buttons
+    document.querySelectorAll('.participant-card button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const card = button.closest('.participant-card');
+        const name = card.getAttribute('data-name');
+        
+        // Soft tactile click pulse
+        button.classList.add('scale-95');
+        setTimeout(() => button.classList.remove('scale-95'), 120);
+      });
+    });
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe pointer-events-none" data-active-classes="text-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.3)]"><div class="px-margin pb-space-sm pt-space-xs"><div class="pointer-events-auto h-16 w-full max-w-md mx-auto rounded-full bg-surface-container-lowest/80 backdrop-blur-2xl px-space-sm flex items-center justify-around shadow-[0_8px_32px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.08)]"><a class="group relative flex flex-col items-center justify-center min-w-[52px] h-12 rounded-full px-2 text-on-surface-variant transition-all duration-200 hover:text-on-surface active:scale-95" data-path="home" href="#"><span class="material-symbols-outlined text-[22px] transition-transform duration-200 group-hover:scale-110">auto_awesome</span><span class="font-label-sm text-label-sm font-medium mt-0.5 leading-none">Home</span></a><a class="group relative flex flex-col items-center justify-center min-w-[52px] h-12 rounded-full px-2 text-on-surface-variant transition-all duration-200 hover:text-on-surface active:scale-95" data-path="gallery" href="#"><span class="material-symbols-outlined text-[22px] transition-transform duration-200 group-hover:scale-110">grid_view</span><span class="font-label-sm text-label-sm font-medium mt-0.5 leading-none">Gallery</span></a><a class="group relative flex flex-col items-center justify-center min-w-[52px] h-12 rounded-full px-2 text-on-surface-variant transition-all duration-200 hover:text-on-surface active:scale-95" data-path="my-photos" href="#"><div class="relative flex items-center justify-center"><span class="material-symbols-outlined text-[22px] transition-transform duration-200 group-hover:scale-110">portrait</span><span class="absolute -top-1 -right-2 px-1 min-w-[14px] h-3.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-[9px] font-bold flex items-center justify-center shadow-sm">12</span></div><span class="font-label-sm text-label-sm font-medium mt-0.5 leading-none">My Photos</span></a><a aria-current="page" class="group relative flex flex-col items-center justify-center min-w-[52px] h-12 rounded-full px-2 transition-all duration-200 active:scale-95 text-primary bg-primary/10 shadow-[0_0_20px_rgba(245,158,11,0.3)]" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px] transition-transform duration-200 group-hover:scale-110">manage_accounts</span><span class="font-label-sm text-label-sm font-medium mt-0.5 leading-none">Profile</span></a></div></div></nav></body></html>

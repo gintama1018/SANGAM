@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_splash_shutter">
+
+    <!-- Aperture Blades Rotation -->
+    <target
+        android:name="aperture_blades_group"
+        android:animation="@animator/shutter_aperture_rotation" />
+
+    <!-- Iris Opening Scale -->
+    <target
+        android:name="aperture_scale_group"
+        android:animation="@animator/shutter_aperture_scale" />
+
+    <!-- Mechanical Lens Chassis Recoil -->
+    <target
+        android:name="chassis_group"
+        android:animation="@animator/shutter_chassis_recoil" />
+
+    <!-- Flash Burst Scale Explosion -->
+    <target
+        android:name="flash_group"
+        android:animation="@animator/shutter_flash_burst" />
+
+    <!-- Flash Burst Alpha Flare and Decay -->
+    <target
+        android:name="flash_core"
+        android:animation="@animator/shutter_flash_alpha" />
+
+</animated-vector>

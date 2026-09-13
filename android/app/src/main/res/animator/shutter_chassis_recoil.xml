@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:ordering="sequentially">
+    <!-- Anticipation before mechanical shutter release (0 to 320ms) -->
+    <set android:ordering="together">
+        <objectAnimator
+            android:duration="320"
+            android:propertyName="scaleX"
+            android:valueFrom="1.0"
+            android:valueTo="0.97"
+            android:interpolator="@android:interpolator/linear" />
+        <objectAnimator
+            android:duration="320"
+            android:propertyName="scaleY"
+            android:valueFrom="1.0"
+            android:valueTo="0.97"
+            android:interpolator="@android:interpolator/linear" />
+    </set>
+    <!-- Shutter trip recoil impulse (320 to 440ms) -->
+    <set android:ordering="together">
+        <objectAnimator
+            android:duration="120"
+            android:propertyName="scaleX"
+            android:valueFrom="0.97"
+            android:valueTo="1.03"
+            android:interpolator="@android:interpolator/decelerate_cubic" />
+        <objectAnimator
+            android:duration="120"
+            android:propertyName="scaleY"
+            android:valueFrom="0.97"
+            android:valueTo="1.03"
+            android:interpolator="@android:interpolator/decelerate_cubic" />
+    </set>
+    <!-- Settling back to resting state (440 to 800ms) -->
+    <set android:ordering="together">
+        <objectAnimator
+            android:duration="360"
+            android:propertyName="scaleX"
+            android:valueFrom="1.03"
+            android:valueTo="1.0"
+            android:interpolator="@android:interpolator/overshoot" />
+        <objectAnimator
+            android:duration="360"
+            android:propertyName="scaleY"
+            android:valueFrom="1.03"
+            android:valueTo="1.0"
+            android:interpolator="@android:interpolator/overshoot" />
+    </set>
+</set>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Camera Lens Chassis & Outer Bezel -->
+    <group
+        android:name="chassis_group"
+        android:pivotX="54"
+        android:pivotY="54">
+
+        <!-- Outer Lens Dial Housing -->
+        <path
+            android:fillColor="@color/surface_container_low"
+            android:pathData="M54,10 A44,44 0 1,0 54.001,10 Z"
+            android:strokeColor="@color/amber_primary"
+            android:strokeWidth="2.5" />
+
+        <!-- F-stop & Lens Index Markers (0, 90, 180, 270 deg) -->
+        <path
+            android:pathData="M54,10 L54,15 M54,98 L54,93 M98,54 L93,54 M10,54 L15,54"
+            android:strokeColor="@color/amber_fixed_dim"
+            android:strokeWidth="2" />
+
+        <!-- Recessed Aperture Cavity -->
+        <path
+            android:fillColor="@color/surface_container_lowest"
+            android:pathData="M54,16 A38,38 0 1,0 54.001,16 Z"
+            android:strokeColor="@color/surface_container_lowest"
+            android:strokeWidth="1" />
+    </group>
+
+    <!-- Aperture Blades Rotating Group -->
+    <group
+        android:name="aperture_blades_group"
+        android:pivotX="54"
+        android:pivotY="54">
+
+        <!-- Blade 1 (0°) -->
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="0">
+            <path
+                android:fillColor="@color/amber_primary"
+                android:pathData="M54,18 A36,36 0 0,1 85.18,36 L60,64.39 L66,54 Z"
+                android:strokeColor="@color/surface_container_lowest"
+                android:strokeWidth="1.2" />
+        </group>
+
+        <!-- Blade 2 (60°) -->
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="60">
+            <path
+                android:fillColor="@color/amber_container"
+                android:pathData="M54,18 A36,36 0 0,1 85.18,36 L60,64.39 L66,54 Z"
+                android:strokeColor="@color/surface_container_lowest"
+                android:strokeWidth="1.2" />
+        </group>
+
+        <!-- Blade 3 (120°) -->
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="120">
+            <path
+                android:fillColor="@color/amber_fixed_dim"
+                android:pathData="M54,18 A36,36 0 0,1 85.18,36 L60,64.39 L66,54 Z"
+                android:strokeColor="@color/surface_container_lowest"
+                android:strokeWidth="1.2" />
+        </group>
+
+        <!-- Blade 4 (180°) -->
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="180">
+            <path
+                android:fillColor="@color/amber_primary"
+                android:pathData="M54,18 A36,36 0 0,1 85.18,36 L60,64.39 L66,54 Z"
+                android:strokeColor="@color/surface_container_lowest"
+                android:strokeWidth="1.2" />
+        </group>
+
+        <!-- Blade 5 (240°) -->
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="240">
+            <path
+                android:fillColor="@color/amber_container"
+                android:pathData="M54,18 A36,36 0 0,1 85.18,36 L60,64.39 L66,54 Z"
+                android:strokeColor="@color/surface_container_lowest"
+                android:strokeWidth="1.2" />
+        </group>
+
+        <!-- Blade 6 (300°) -->
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="300">
+            <path
+                android:fillColor="@color/amber_fixed_dim"
+                android:pathData="M54,18 A36,36 0 0,1 85.18,36 L60,64.39 L66,54 Z"
+                android:strokeColor="@color/surface_container_lowest"
+                android:strokeWidth="1.2" />
+        </group>
+    </group>
+
+    <!-- Inner Central Iris Pupil (contracts during stop-down) -->
+    <group
+        android:name="aperture_scale_group"
+        android:pivotX="54"
+        android:pivotY="54">
+
+        <path
+            android:fillColor="@color/surface_container_lowest"
+            android:pathData="M54,42.5 A11.5,11.5 0 1,0 54.001,42.5 Z" />
+
+        <!-- Lens Optics Highlight Arc -->
+        <path
+            android:pathData="M50,49 A5,5 0 0,1 58,49"
+            android:strokeAlpha="0.5"
+            android:strokeColor="@color/amber_primary"
+            android:strokeWidth="1.2" />
+    </group>
+
+    <!-- Flash Burst (Fires on shutter trip) -->
+    <group
+        android:name="flash_group"
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.2"
+        android:scaleY="0.2">
+
+        <!-- Flash Flare Star & Central Corona -->
+        <path
+            android:name="flash_core"
+            android:fillAlpha="0.0"
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,24 L57,51 L84,54 L57,57 L54,84 L51,57 L24,54 L51,51 Z M54,40 A14,14 0 1,0 54.001,40 Z"
+            android:strokeAlpha="0.0"
+            android:strokeColor="@color/amber_primary"
+            android:strokeWidth="2" />
+    </group>
+
+</vector>
